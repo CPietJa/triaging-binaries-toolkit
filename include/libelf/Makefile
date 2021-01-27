@@ -18,10 +18,16 @@ HFILES=\
 	elf.h\
 	fns.h\
 
-default: $(LIB)
+default: deps $(LIB)
 $(LIB): $(OFILES) $(HFILES)
 	$(AR) r $(LIB) $(OFILES)
 	$(RANLIB) $(LIB)
+
+deps:
+	@cd libbele/ && $(MAKE)
+
+cleandeps:
+	@cd libbele/ && $(MAKE) nuke
 
 %.o: %.c
 	$(CC) $(CFLAGS) $*.c
@@ -29,5 +35,5 @@ $(LIB): $(OFILES) $(HFILES)
 clean:
 	rm -f *.o
 
-nuke: clean
+nuke: clean cleandeps
 	rm -f $(LIB)

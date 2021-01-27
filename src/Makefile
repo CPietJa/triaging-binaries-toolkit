@@ -26,7 +26,7 @@ tbt.o : tbt.c tbt.h $(LIBELF_DIR)/elf.h
 
 clean:
 	@rm -f *~ *.o $(EXE)
-	@cd $(LIBELF_DIR) && $(MAKE) clean
+	@cd $(LIBELF_DIR) && $(MAKE) nuke
 
 help:
 	@echo "Usage:"
