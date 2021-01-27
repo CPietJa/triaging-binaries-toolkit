@@ -1,0 +1,16 @@
+---
+BasedOnStyle: LLVM
+#UseTab: Never
+IndentWidth: 4
+#TabWidth: 4
+BreakBeforeBraces: WebKit
+#BraceWrapping: {
+#    Afterenum: true
+#}
+AllowShortIfStatementsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: None
+#IndentCaseLabels: false
+ColumnLimit: 80
+SpaceAfterCStyleCast: true
+#AccessModifierOffset: -4
+...
