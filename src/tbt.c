@@ -1,5 +1,6 @@
 /* INCLUDES */
 #include "tbt.h"
+#include "elf_manager.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -8,6 +9,8 @@
 
 #include <err.h>
 #include <getopt.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 #include <libelf/elf.h>
 
@@ -24,7 +27,7 @@ static FILE *OUTPUT = NULL;
  */
 static void help(void)
 {
-    printf("Usage: tbt [-a ALGO|-o FILE|-v|-V|-h] FILE|DIR...\n"
+    printf("Usage: tbt [-a ALGO|-o FILE|-v|-V|-h] FILE|DIR\n"
            "Compute Fuzzy Hashing\n\n"
            " -a ALGO,--algorithm ALGO\tALGO : CTPH|LSH\n"
            " -o FILE,--output FILE\t\twrite result to FILE\n"
@@ -95,30 +98,26 @@ int main(int argc, char *argv[])
         }
     }
 
-    Fhdr fhdr;
-    FILE *f;
-    uint8_t *buf;
-    uint64_t len;
+    if (argc - optind != 1)
+        errx(EXIT_FAILURE, "error: invalid number of files or directory");
 
-    /*if(argc != 3)
-            return -1;*/
+    /* Check file type */
+    struct stat info;
 
-    f = fopen("/bin/ls", "rb");
-    /*f = fopen(argv[1], "rb");
-    if (f == NULL)
-            errx(EXIT_FAILURE, "error: can't open %s", argv[1]);*/
+    if (stat(argv[optind], &info) != 0)
+        errx(EXIT_FAILURE, "error: cannot access %s", argv[optind]);
+    else if (S_ISDIR(info.st_mode))
+        printf("%s is a directory\n", argv[optind]);
+    else if (S_ISREG(info.st_mode))
+        printf("%s is a regular file\n", argv[optind]);
+    else
+        errx(EXIT_FAILURE, "error: invalid file");
 
-    buf = readelfsection(f, ".rodata", &len, &fhdr);
-    if (buf == NULL)
-        return -1;
-
-    /* Code Test */
-    printelfhdr(&fhdr);
-    printf("\n");
-    // print_buf_elf(buf,len);
-
-    freeelf(&fhdr);
-    fclose(f);
+    // FILE *f = fopen("/bin/wc", "rb");
+    // elf_data data = elf_get_data(f);
+    // fclose(f);
+    // elf_print_data(data);
+    // elf_free(data);
 
     return error_exit;
 }

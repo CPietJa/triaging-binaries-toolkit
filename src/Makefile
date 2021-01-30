@@ -9,6 +9,8 @@ LDFLAGS=-lm
 LIBELF_DIR=../include/libelf
 LIBELF=$(LIBELF_DIR)/libelf.a $(LIBELF_DIR)/libbele/libbele.a
 
+OBJ=tbt.o elf_manager.o
+
 # Special rules and targets
 .PHONY: all clean help
 
@@ -18,10 +20,13 @@ all: libs $(EXE)
 libs:
 	@cd $(LIBELF_DIR) && $(MAKE)
 
-$(EXE): tbt.o
+$(EXE): $(OBJ)
 	$(CC) $(CFLAGS) -o $@ $^ $(LIBELF) $(LDFLAGS)
 
 tbt.o : tbt.c tbt.h $(LIBELF_DIR)/elf.h
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c $<
+
+elf_manager.o : elf_manager.c ../include/elf_manager.h $(LIBELF_DIR)/elf.h
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c $<
 
 clean:
