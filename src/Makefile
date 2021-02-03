@@ -7,7 +7,7 @@ CPPFLAGS=-I../include -DDEBUG
 LDFLAGS=-lm
 
 LIBELF_DIR=../include/libelf
-LIBELF=$(LIBELF_DIR)/libelf.a $(LIBELF_DIR)/libbele/libbele.a
+LIBELF=$(LIBELF_DIR)/elf.o $(LIBELF_DIR)/print.o $(LIBELF_DIR)/str.o $(LIBELF_DIR)/libbele/beget.o $(LIBELF_DIR)/libbele/leget.o
 
 OBJ=tbt.o elf_manager.o
 

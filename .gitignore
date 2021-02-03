@@ -1,6 +1,10 @@
 # Others
 tbt
 
+#Editor file
+.DS_Store
+.vscode
+
 # Prerequisites
 *.d
 
