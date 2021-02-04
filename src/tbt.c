@@ -130,7 +130,7 @@ int main(int argc, char *argv[])
     /* clang-format on */
 
     OUTPUT = stdout;
-    int error_exit = EXIT_SUCCESS;
+    int return_code = EXIT_SUCCESS;
 
     int optc;
     const char *options = "o:vVha:";
@@ -173,7 +173,8 @@ int main(int argc, char *argv[])
 
     if (stat(argv[optind], &info) != 0)
         errx(EXIT_FAILURE, "error: cannot access '%s'", argv[optind]);
-    else if (S_ISDIR(info.st_mode)) {
+
+    if (S_ISDIR(info.st_mode)) {
         fprintf(stderr, "'%s' is a directory\n", argv[optind]);
 
         char dir_path[2048];
@@ -184,7 +185,7 @@ int main(int argc, char *argv[])
             sprintf(dir_path, "%s/", argv[optind]);
 
         if (!treat_dir(dir_path))
-            error_exit = EXIT_FAILURE;
+            return_code = EXIT_FAILURE;
     } else if (S_ISREG(info.st_mode)) {
         fprintf(stderr, "'%s' is a regular file\n", argv[optind]);
         if (!treat_file(argv[optind]))
@@ -192,5 +193,5 @@ int main(int argc, char *argv[])
     } else
         errx(EXIT_FAILURE, "error: invalid file");
 
-    return error_exit;
+    return return_code;
 }
