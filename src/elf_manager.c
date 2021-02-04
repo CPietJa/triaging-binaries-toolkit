@@ -64,6 +64,7 @@ void elf_free(elf_data data)
 {
     if (!data)
         return;
+
     for (uint8_t i = 0; i < SECTION_END; i++)
         if (data[i].len)
             free(data[i].data);
@@ -110,13 +111,15 @@ void elf_print_section(section_data data, section_e section)
     uint8_t n_bytes = 16;
     uint8_t tab[n_bytes];
     uint8_t col = 0, space = 0;
+
     printf("\t");
     for (uint64_t i = 0; i < len && i < n_bytes_max; i++, col++) {
         if (col % 4 == 0 && i != 0) {
             printf(" ");
             space++;
         }
-        if (col >= n_bytes) {
+
+	if (col >= n_bytes) {
             printf(" ");
             for (uint8_t j = 0; j < n_bytes; j++) {
                 if (is_printable(tab[j]))
@@ -127,13 +130,16 @@ void elf_print_section(section_data data, section_e section)
             col = space = 0;
             printf("\n\t");
         }
-        tab[col] = buf[i];
+
+	tab[col] = buf[i];
         printf("%02x", buf[i]);
     }
     uint8_t offset = (n_bytes - col) * 2 + 5 - space;
+
     for (uint8_t j = 0; j < offset; j++) {
         printf(" ");
     }
+
     for (uint8_t j = 0; j < col; j++) {
         if (is_printable(tab[j]))
             printf("%c", (char) tab[j]);
@@ -147,6 +153,7 @@ void elf_print_data(elf_data data)
 {
     if (!data)
         return;
+
     for (uint8_t i = 0; i < SECTION_END; i++) {
         elf_print_section(data[i], i);
         printf("\n");
