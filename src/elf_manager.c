@@ -5,6 +5,8 @@
 
 #include <libelf/elf.h>
 
+#include <ctype.h>
+
 /* clang-format off */
 char* SECTION_NAME[SECTION_END] =
 {
@@ -71,27 +73,6 @@ void elf_free(elf_data data)
     free(data);
 }
 
-static bool is_printable(uint8_t c)
-{
-    if (c >= 32 && c <= 126)
-        return true;
-    /*if(c == 128)
-            return true;
-    if(c >= 130 && c <= 140)
-            return true;
-    if(c == 142)
-            return true;
-    if(c >= 145 && c <= 156)
-            return true;
-    if(c == 158 || c == 159)
-            return true;
-    if(c >= 161 && c <= 172)
-            return true;
-    if(c >= 174)
-            return true;*/
-    return false;
-}
-
 void elf_print_section(section_data data, section_e section)
 {
     if (section < 0 || section >= SECTION_END)
@@ -119,10 +100,10 @@ void elf_print_section(section_data data, section_e section)
             space++;
         }
 
-	if (col >= n_bytes) {
+        if (col >= n_bytes) {
             printf(" ");
             for (uint8_t j = 0; j < n_bytes; j++) {
-                if (is_printable(tab[j]))
+                if (isprint(tab[j]))
                     printf("%c", (char) tab[j]);
                 else
                     printf(".");
@@ -131,7 +112,7 @@ void elf_print_section(section_data data, section_e section)
             printf("\n\t");
         }
 
-	tab[col] = buf[i];
+        tab[col] = buf[i];
         printf("%02x", buf[i]);
     }
     uint8_t offset = (n_bytes - col) * 2 + 5 - space;
@@ -141,7 +122,7 @@ void elf_print_section(section_data data, section_e section)
     }
 
     for (uint8_t j = 0; j < col; j++) {
-        if (is_printable(tab[j]))
+        if (isprint(tab[j]))
             printf("%c", (char) tab[j]);
         else
             printf(".");
