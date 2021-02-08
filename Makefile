@@ -14,6 +14,9 @@ build:
 test: build
 	@cd test && $(MAKE)
 
+format:
+	clang-format -i -style=file src/*.[ch] test/*.[ch]
+
 clean:
 	@cd src && $(MAKE) clean
 	@cd test && $(MAKE) clean
