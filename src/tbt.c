@@ -22,7 +22,8 @@
 /* GLOBAL VARIABLES */
 static bool verbose = false;
 static FILE *OUTPUT = NULL;
-
+static enum algorithm { ALL, CTPH, LSH, NONE };
+static enum algorithm chosen_algorithm = NONE;
 /* FUNCTIONS */
 
 /**
@@ -32,7 +33,7 @@ static void help(void)
 {
     printf("Usage: tbt [-a ALGO|-o FILE|-v|-V|-h] FILE|DIR\n"
            "Compute Fuzzy Hashing\n\n"
-           " -a ALGO,--algorithm ALGO\tALGO : CTPH|LSH\n"
+           " -a ALGO,--algorithm ALGO\tALGO : CTPH|LSH|ALL\n"
            " -o FILE,--output FILE\t\twrite result to FILE\n"
            " -v,--verbose\t\t\tverbose output\n"
            " -V,--version\t\t\tdisplay version and exit\n"
@@ -50,6 +51,15 @@ static void version(void)
            REVISION);
     exit(EXIT_SUCCESS);
 }
+
+// static void output_file_hash(char *filename, char *filehash)
+// {
+//     if (OUTPUT == NULL)
+//         errx(EXIT_FAILURE, "An error occured : OUTPUT cannot be null ");
+//
+//
+//     exit(EXIT_SUCCESS);
+// }
 
 /**
  * Treatment ELF File.
@@ -76,11 +86,22 @@ static bool treat_file(char *file_path)
             "[+] File '%s'\n"
             "[+] Fuzzy Hashing\n",
             file_path);
+
+    char *CTPhash = "Test CTPhash for now", *LShash = "Test LShash for now";
     /* CTPH */
     fprintf(stderr, "[+] \tCTPH ...\n");
     /* LSH */
     fprintf(stderr, "[+] \tLSH  ...\n");
 
+    char *temp_file_name = strrchr(file_path, '/');
+    temp_file_name = (temp_file_name == NULL) ? file_path : temp_file_name + 1;
+    if (chosen_algorithm == ALL)
+        fprintf(OUTPUT, "%s:\n\t1:%s\n\t2:%s\n", temp_file_name, CTPhash,
+                LShash);
+    else
+        fprintf(OUTPUT, "%s:\n\t%d:%s\n", temp_file_name,
+                (chosen_algorithm == CTPH) ? 1 : 2,
+                (chosen_algorithm == CTPH) ? CTPhash : LShash);
     /* Free Data */
     elf_free(data);
     return true;
@@ -157,7 +178,12 @@ int main(int argc, char *argv[])
             break;
 
         case 'a':
-            printf("Option -a not implemented yet!\n");
+            if (strcmp(optarg, "ALL") == 0 || strcmp(optarg, "all") == 0)
+                chosen_algorithm = ALL;
+            else if (strcmp(optarg, "CTPH") == 0 || strcmp(optarg, "ctph") == 0)
+                chosen_algorithm = CTPH;
+            else if (strcmp(optarg, "LSH") == 0 || strcmp(optarg, "lsh") == 0)
+                chosen_algorithm = ALL;
             break;
 
         default:
