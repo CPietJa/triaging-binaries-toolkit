@@ -3,7 +3,6 @@
 #include "elf_manager.h"
 
 #include <stdbool.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -11,6 +10,7 @@
 #include <err.h>
 #include <errno.h>
 #include <getopt.h>
+#include <inttypes.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>

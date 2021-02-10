@@ -140,3 +140,16 @@ void elf_print_data(elf_data data)
         printf("\n");
     }
 }
+
+/* Return the cumulated size of all sections, 0 if any problems */
+uint64_t elf_get_data_size(elf_data data)
+{
+    if (data == NULL)
+        return 0;
+
+    uint64_t size = 0;
+    for (uint8_t i = 0; i < SECTION_END; i++)
+        size += data[i].len;
+
+    return size;
+}

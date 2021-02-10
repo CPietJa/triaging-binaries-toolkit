@@ -2,8 +2,9 @@
 #define ELF_MANAGER
 
 #include <stdbool.h>
-#include <stdint.h>
 #include <stdio.h>
+
+#include <inttypes.h>
 
 /* Stock data of an ELF section */
 typedef struct {
@@ -34,5 +35,6 @@ elf_data elf_get_data(FILE *elf_fd);
 void elf_free(elf_data data);
 void elf_print_section(section_data data, section_e section);
 void elf_print_data(elf_data data);
+uint64_t elf_get_data_size(elf_data data);
 
 #endif /* ELF_MANAGER */
