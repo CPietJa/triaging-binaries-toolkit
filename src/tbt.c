@@ -1,5 +1,6 @@
 /* INCLUDES */
 #include "tbt.h"
+#include "ctph.h"
 #include "elf_manager.h"
 
 #include <stdbool.h>
@@ -18,11 +19,13 @@
 #include <libelf/elf.h>
 
 /* ENUMS */
+typedef enum { ALL, CTPH, LSH } algorithm;
 
 /* GLOBAL VARIABLES */
 static bool verbose = false;
 static FILE *OUTPUT = NULL;
-static enum algorithm { ALL, CTPH, LSH } chosen_algorithm = ALL;
+static algorithm chosen_algorithm = ALL;
+
 /* FUNCTIONS */
 
 /**
@@ -80,6 +83,7 @@ static bool treat_file(char *file_path)
     char *CTPhash = "Test CTPhash for now", *LShash = "Test LShash for now";
     /* CTPH */
     fprintf(stderr, "[+] \tCTPH ...\n");
+
     /* LSH */
     fprintf(stderr, "[+] \tLSH  ...\n");
 
