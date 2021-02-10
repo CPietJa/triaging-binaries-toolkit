@@ -146,6 +146,7 @@ int main(int argc, char *argv[])
 
     int optc;
     char *outputoption = "";
+    bool optionO = false;
     const char *options = "o:vVha:";
     while ((optc = getopt_long(argc, argv, options, long_opts, NULL)) != -1) {
 
@@ -156,6 +157,7 @@ int main(int argc, char *argv[])
 
         case 'o':
             outputoption = optarg;
+            optionO = true;
             break;
 
         case 'v':
@@ -182,10 +184,10 @@ int main(int argc, char *argv[])
             errx(EXIT_FAILURE, "error: invalid option '%s'!", argv[optind - 1]);
         }
     }
-
-    if ((OUTPUT = fopen(outputoption, "w")) == NULL)
-        errx(EXIT_FAILURE, "error: can't create and/or open the file '%s'!",
-             outputoption);
+    if (optionO == true)
+        if ((OUTPUT = fopen(outputoption, "w")) == NULL)
+            errx(EXIT_FAILURE, "error: can't create and/or open the file '%s'!",
+                 outputoption);
 
     if (argc - optind != 1)
         errx(EXIT_FAILURE, "error: invalid number of files or directory");
