@@ -22,8 +22,7 @@
 /* GLOBAL VARIABLES */
 static bool verbose = false;
 static FILE *OUTPUT = NULL;
-static enum algorithm { ALL, CTPH, LSH, NONE };
-static enum algorithm chosen_algorithm = NONE;
+static enum algorithm { ALL, CTPH, LSH } chosen_algorithm = ALL;
 /* FUNCTIONS */
 
 /**
@@ -51,15 +50,6 @@ static void version(void)
            REVISION);
     exit(EXIT_SUCCESS);
 }
-
-// static void output_file_hash(char *filename, char *filehash)
-// {
-//     if (OUTPUT == NULL)
-//         errx(EXIT_FAILURE, "An error occured : OUTPUT cannot be null ");
-//
-//
-//     exit(EXIT_SUCCESS);
-// }
 
 /**
  * Treatment ELF File.
@@ -102,6 +92,7 @@ static bool treat_file(char *file_path)
         fprintf(OUTPUT, "%s:\n\t%d:%s\n", temp_file_name,
                 (chosen_algorithm == CTPH) ? 1 : 2,
                 (chosen_algorithm == CTPH) ? CTPhash : LShash);
+
     /* Free Data */
     elf_free(data);
     return true;
@@ -154,6 +145,7 @@ int main(int argc, char *argv[])
     int return_code = EXIT_SUCCESS;
 
     int optc;
+    char *outputoption = "";
     const char *options = "o:vVha:";
     while ((optc = getopt_long(argc, argv, options, long_opts, NULL)) != -1) {
 
@@ -163,10 +155,7 @@ int main(int argc, char *argv[])
             break;
 
         case 'o':
-            OUTPUT = fopen(optarg, "w");
-            if (!OUTPUT)
-                errx(EXIT_FAILURE,
-                     "error: can't create and/or open the file '%s'!", optarg);
+            outputoption = optarg;
             break;
 
         case 'v':
@@ -183,13 +172,20 @@ int main(int argc, char *argv[])
             else if (strcmp(optarg, "CTPH") == 0 || strcmp(optarg, "ctph") == 0)
                 chosen_algorithm = CTPH;
             else if (strcmp(optarg, "LSH") == 0 || strcmp(optarg, "lsh") == 0)
-                chosen_algorithm = ALL;
+                chosen_algorithm = LSH;
+            else
+                errx(EXIT_FAILURE, "-a option's [%s] argument is not valid!",
+                     optarg);
             break;
 
         default:
             errx(EXIT_FAILURE, "error: invalid option '%s'!", argv[optind - 1]);
         }
     }
+
+    if ((OUTPUT = fopen(outputoption, "w")) == NULL)
+        errx(EXIT_FAILURE, "error: can't create and/or open the file '%s'!",
+             outputoption);
 
     if (argc - optind != 1)
         errx(EXIT_FAILURE, "error: invalid number of files or directory");
