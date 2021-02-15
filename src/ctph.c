@@ -15,6 +15,7 @@
 
 #include <stdlib.h>
 
+#include <math.h>
 #include <string.h>
 
 #define WINDOW_SIZE 7    /* Bytes */
@@ -105,11 +106,14 @@ static const char *b64 =
  * @brief Compute and return the hash of the ELF data in Base64
  *
  * @param data the ELF Data
- * @return uint8_t* the hash in Base64
+ * @param sign_length put the size of the hash in it
+ * @param coef adjust the block size for the trigger.
+ * @return uint8_t* the hash in Base64, NULL otherwise
  */
-uint8_t *ctph_hash(elf_data data)
+static uint8_t *ctph_hash_engine(elf_data data, uint16_t *sign_length,
+                                 uint8_t coef)
 {
-    if (!data)
+    if (!data || coef == 0)
         return NULL;
 
     rh_state state;
@@ -117,11 +121,15 @@ uint8_t *ctph_hash(elf_data data)
 
     fnv_hash hash = FNV_OFFSET_BASIS;
 
-    uint8_t signature[SIGN_LENGTH];
+    uint8_t signature[SIGN_LENGTH + 1];
 
     uint8_t window = 1;
-    uint32_t B = elf_get_data_size(data) / SIGN_LENGTH; /* Trigger Value */
-    uint8_t count = 0;                                  /* Number of Trigger */
+    uint32_t B =
+        MIN_BLOCK_SIZE *
+        pow(2, log2(elf_get_data_size(data) /
+                    (SIGN_LENGTH - MIN_BLOCK_SIZE))); /* Trigger Value */
+    B /= coef;
+    uint16_t count = 0; /* Number of Trigger */
 
     /* Moving the window */
     for (uint8_t i = 0; i < SECTION_END; i++) {
@@ -152,9 +160,14 @@ uint8_t *ctph_hash(elf_data data)
             }
         }
     }
+    /* Last hash between last trigger point and end of the data */
+    if (hash != FNV_OFFSET_BASIS) {
+        signature[count] = b64[hash & 0x3F];
+        count++;
+    }
+
+    (*sign_length) = count - 1;
     signature[count] = '\0';
-    /*printf("C : %u\n", count);*/
-    /*printf("%s\n", signature);*/
 
     /* Copy Signature */
     uint8_t *final_hash = malloc(sizeof(uint8_t) * (count + 1));
@@ -163,4 +176,32 @@ uint8_t *ctph_hash(elf_data data)
 
     memcpy(final_hash, signature, count + 1);
     return final_hash;
+}
+
+/**
+ * @brief Compute and return the hash of the ELF data in Base64
+ *
+ * @param data the ELF Data
+ * @return uint8_t* the hash in Base64, NULL otherwise
+ */
+uint8_t *ctph_hash(elf_data data)
+{
+    if (!data)
+        return NULL;
+
+    uint8_t *hash = NULL;
+    uint16_t hash_length = 0;
+    uint8_t coef = 1;
+
+    do {
+        hash = ctph_hash_engine(data, &hash_length, coef);
+        if (hash == NULL)
+            return NULL;
+        if (hash_length < 32) {
+            free(hash);
+            coef *= 2;
+        }
+    } while (hash_length < 32);
+
+    return hash;
 }
