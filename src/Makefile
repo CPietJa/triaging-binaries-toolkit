@@ -9,7 +9,7 @@ LDFLAGS=-lm
 LIBELF_DIR=../include/libelf
 LIBELF=$(LIBELF_DIR)/elf.o $(LIBELF_DIR)/print.o $(LIBELF_DIR)/str.o $(LIBELF_DIR)/libbele/beget.o $(LIBELF_DIR)/libbele/leget.o
 
-OBJ=tbt.o elf_manager.o ctph.o
+OBJ=tbt.o elf_manager.o ctph.o edit_dist.o
 
 # Special rules and targets
 .PHONY: all clean help
@@ -30,6 +30,9 @@ elf_manager.o : elf_manager.c ../include/elf_manager.h $(LIBELF_DIR)/elf.h
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c $<
 
 ctph.o : ctph.c ../include/ctph.h
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c $<
+
+edit_dist.o : edit_dist.c ../include/edit_dist.h
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c $<
 
 clean:
