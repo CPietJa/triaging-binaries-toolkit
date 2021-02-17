@@ -25,6 +25,69 @@ static FILE *OUTPUT = NULL;
 static enum algorithm { ALL, CTPH, LSH } chosen_algorithm = ALL;
 /* FUNCTIONS */
 
+static void comparision()
+{
+    printf("0");
+}
+
+static void print_table(char *hash_table, int taille)
+{
+    fprintf(OUTPUT, "HASH visual \n");
+
+    for (int i = 0; i < taille; i++) {
+        fprintf(OUTPUT, "%c", hash_table[i]);
+    }
+}
+
+static void file_parser(char *file)
+{
+    FILE *in = fopen("hash_storage.txt", "r");
+    // printf("DO you succeed?\n");
+    if (in == NULL)
+        errx(EXIT_FAILURE, "problem opening file");
+
+    char *line_buf = malloc(200 * sizeof(char));
+    int line_buf_size = 200;
+    char hash_table[50] = "";
+
+    // printf("What about now?\n");
+
+    printf("%s\n", line_buf);
+    while (!feof(in)) {
+        // printf("and now?\n");
+        fgets(line_buf, line_buf_size, in);
+        if (ferror(in)) {
+            fprintf(stderr, "Reading error with code %d\n", errno);
+            break;
+        }
+        int i = 0, index = 0;
+        while (line_buf[i] != '\0') {
+            if (line_buf[i] == '\t' || line_buf[i] == ' ')
+                while (line_buf[i] != '1' && line_buf[i] != '2')
+                    i++;
+
+            if (line_buf[i] == '1') {
+                i += 2;
+                for (i, index = 0; line_buf[i] != '\0'; i++, index++)
+                    hash_table[index] = line_buf[i];
+            } else if (line_buf[i] == '2') {
+                i += 2;
+                for (i, index = 0; line_buf[i] != '\0'; i++, index++)
+                    hash_table[index] = line_buf[i];
+            } else
+                i++;
+        }
+        // printf("annnnnnnnnnd now?\n");
+
+        print_table(hash_table, 50);
+        // fgets(line_buf, line_buf_size, in);
+    }
+    // printf("Shoul be over now?\n");
+
+    free(line_buf);
+    fclose(in);
+}
+
 /**
  * Display the help and exit.
  */
@@ -83,13 +146,17 @@ static bool treat_file(char *file_path)
     /* LSH */
     fprintf(stderr, "[+] \tLSH  ...\n");
 
+    FILE *hash_storage = fopen("hash_storage.txt", "w");
+    if (f == NULL)
+        errx(EXIT_FAILURE, "Couldn't create the file to store the hashes");
+
     char *temp_file_name = strrchr(file_path, '/');
     temp_file_name = (temp_file_name == NULL) ? file_path : temp_file_name + 1;
     if (chosen_algorithm == ALL)
-        fprintf(OUTPUT, "%s:\n\t1:%s\n\t2:%s\n", temp_file_name, CTPhash,
+        fprintf(hash_storage, "%s:\n\t1:%s\n\t2:%s\n", temp_file_name, CTPhash,
                 LShash);
     else
-        fprintf(OUTPUT, "%s:\n\t%d:%s\n", temp_file_name,
+        fprintf(hash_storage, "%s:\n\t%d:%s\n", temp_file_name,
                 (chosen_algorithm == CTPH) ? 1 : 2,
                 (chosen_algorithm == CTPH) ? CTPhash : LShash);
 
@@ -216,6 +283,8 @@ int main(int argc, char *argv[])
             errx(EXIT_FAILURE, "error: '%s' is an invalid file", argv[optind]);
     } else
         errx(EXIT_FAILURE, "error: invalid file");
+
+    file_parser(outputoption);
 
     return return_code;
 }
