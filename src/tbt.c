@@ -16,76 +16,209 @@
 #include <sys/types.h>
 
 #include <libelf/elf.h>
+/* DEFINES */
+#define LINE_BUF_SIZE 400
 
 /* ENUMS */
 
 /* GLOBAL VARIABLES */
-static bool verbose = false;
+static bool verbose = false, comparision_wanted = false;
 static FILE *OUTPUT = NULL;
 static enum algorithm { ALL, CTPH, LSH } chosen_algorithm = ALL;
+
+/* Structures */
+typedef struct {
+    char name[LINE_BUF_SIZE];
+    char LSH_hash[33];
+    char CTPH_hash[150];
+} file_info_t;
+
 /* FUNCTIONS */
-
-static void comparision()
+static void convert(char *hash_table, int *final_hash_conversion)
 {
-    printf("0");
-}
+    size_t lenght = strlen(hash_table);
+    size_t i = 0, j = 0;
+    for (j = 0, i = 0; j < lenght; j += 2, i++) {
+        char tmp[3];
+        tmp[0] = hash_table[j];
+        tmp[1] = hash_table[j + 1];
+        tmp[2] = '\0';
 
-static void print_table(char *hash_table, int taille)
-{
-    fprintf(OUTPUT, "HASH visual \n");
+        int base = 1, final_value = 0;
+        for (int k = 2; k >= 0; k--) {
 
-    for (int i = 0; i < taille; i++) {
-        fprintf(OUTPUT, "%c", hash_table[i]);
+            if (tmp[k] >= '0' && tmp[k] <= '9') {
+                final_value += (tmp[k] - 48) * base;
+                base *= 16;
+            } else if (tmp[k] >= 'A' && tmp[k] <= 'Z') {
+                final_value += (tmp[k] - 55) * base;
+                base *= 16;
+            } else if (tmp[k] >= 'a' && tmp[k] <= 'z') {
+                final_value += (tmp[k] - 87) * base;
+                base *= 16;
+            }
+        }
+        final_hash_conversion[i] = final_value;
     }
 }
 
-static void file_parser(char *file)
+/** DEBUG **/
+static void print_table(char *hash_table, int taille)
 {
-    FILE *in = fopen("hash_storage.txt", "r");
-    // printf("DO you succeed?\n");
-    if (in == NULL)
-        errx(EXIT_FAILURE, "problem opening file");
+    uint8_t max_lenght = 16;
+    int final_hash_conversion[max_lenght];
+    convert(hash_table, final_hash_conversion);
 
-    char *line_buf = malloc(200 * sizeof(char));
-    int line_buf_size = 200;
-    char hash_table[50] = "";
+    for (uint8_t i = 0; i < max_lenght; i++) {
+        printf("%d %d %c \n", i, final_hash_conversion[i],
+               final_hash_conversion[i]);
+    }
+}
 
-    // printf("What about now?\n");
+static void comparision(int nb_files, FILE *in)
+{
+    float matriceCTPH[nb_files][nb_files];
+    float matriceLSH[nb_files][nb_files];
+    for (int i = 0; i < nb_files; i++)
+        for (int j = 0; j < nb_files; j++) {
+            matriceCTPH[i][j] = 0;
+            matriceLSH[i][j] = 0;
+        }
+    for (int i = 0; i < nb_files; i++)
+        for (int j = i + 1; j < nb_files; j++) {
+            matriceCTPH[i][j] = j + 100;
+            matriceLSH[i][j] = j + 100;
+        }
 
-    printf("%s\n", line_buf);
+    for (int i = 0; i < nb_files; i++)
+        printf("%d ", i);
+    for (int i = 0; i < nb_files; i++) {
+        printf("\n%d ", i);
+        for (int j = 0; j < nb_files; j++)
+            printf("%f ", matriceCTPH[i][j]);
+    }
+
+    printf("\n\n");
+    for (int i = 0; i < nb_files; i++)
+        printf("%d ", i);
+    for (int i = 0; i < nb_files; i++) {
+        printf("\n%d ", i);
+        for (int j = 0; j < nb_files; j++)
+            printf("%f ", matriceLSH[i][j]);
+    }
+    printf("\n");
+}
+
+static uint64_t get_nb_files(FILE *in)
+{
+    uint64_t nb_files = 0;
+    char line_buf[LINE_BUF_SIZE];
+
+    /* Returning to the beginning of the file */
+    if (fseek(in, 0, SEEK_SET) != 0)
+        errx(EXIT_FAILURE, "Couldn't return to the beginning of the file");
+
+    /* Get nb_files */
+    fgets(line_buf, LINE_BUF_SIZE, in);
+
     while (!feof(in)) {
-        // printf("and now?\n");
-        fgets(line_buf, line_buf_size, in);
+        if (ferror(in)) {
+            fprintf(stderr, "Reading error with code %d\n", errno);
+            break;
+        }
+        if (line_buf[0] == '\t')
+            fgets(line_buf, LINE_BUF_SIZE, in);
+        else
+            nb_files++;
+
+        fgets(line_buf, LINE_BUF_SIZE, in);
+    }
+    return nb_files;
+}
+
+/* DEBUG STRUCT PRINT */
+static void print_struct(file_info_t file_content[], uint64_t size)
+{
+    for (uint64_t i = 0; i < size; i++) {
+        printf("%s\n", file_content[i].name);
+        printf("%s\n", file_content[i].CTPH_hash);
+        // for (int i = 0; i < 32; i++)
+        printf("%s\n", file_content[i].LSH_hash);
+        if (i != size - 1)
+            printf("\n");
+    }
+}
+
+static void get_file_content(FILE *in, file_info_t file_content[],
+                             uint64_t nb_files)
+{
+
+    char line_buf[LINE_BUF_SIZE];
+    int file_count = 0;
+
+    /* Returning to the beginning of the file */
+    if (fseek(in, 0, SEEK_SET) != 0)
+        errx(EXIT_FAILURE, "Couldn't return to the beginning of the file");
+
+    while (!feof(in)) {
         if (ferror(in)) {
             fprintf(stderr, "Reading error with code %d\n", errno);
             break;
         }
         int i = 0, index = 0;
         while (line_buf[i] != '\0') {
-            if (line_buf[i] == '\t' || line_buf[i] == ' ')
+
+            if (line_buf[i] == '\t') {
                 while (line_buf[i] != '1' && line_buf[i] != '2')
                     i++;
+            } else if (line_buf[i] == '1' && i != 0 && file_count > 0) {
+                for (i = i + 2, index = 0;
+                     line_buf[i] != '\0' && line_buf[i] != '\n'; i++, index++) {
+                    file_content[file_count - 1].CTPH_hash[index] = line_buf[i];
+                }
+            }
 
-            if (line_buf[i] == '1') {
-                i += 2;
-                for (i, index = 0; line_buf[i] != '\0'; i++, index++)
-                    hash_table[index] = line_buf[i];
-            } else if (line_buf[i] == '2') {
-                i += 2;
-                for (i, index = 0; line_buf[i] != '\0'; i++, index++)
-                    hash_table[index] = line_buf[i];
-            } else
+            else if (line_buf[i] == '2' && i != 0 && file_count > 0) {
+                for (i = i + 2, index = 0;
+                     line_buf[i] != '\0' && line_buf[i] != '\n'; i++, index++) {
+                    file_content[file_count - 1].LSH_hash[index] = line_buf[i];
+                }
+            } else if (i == 0) {
+                for (index = 0; line_buf[i] != '\0' && line_buf[i] != '\n';
+                     i++, index++) {
+                    file_content[file_count].name[index] = line_buf[i];
+                }
+
+                file_count++;
+
                 i++;
+            } else {
+                i++;
+            }
         }
-        // printf("annnnnnnnnnd now?\n");
-
-        print_table(hash_table, 50);
-        // fgets(line_buf, line_buf_size, in);
+        fgets(line_buf, LINE_BUF_SIZE, in);
     }
-    // printf("Shoul be over now?\n");
+}
 
-    free(line_buf);
+static void file_parser(char *file_name)
+{
+    FILE *in = fopen(file_name, "r");
+    if (in == NULL)
+        errx(EXIT_FAILURE, "problem opening file");
+
+    uint64_t nb_files = get_nb_files(in);
+    file_info_t file_content[nb_files];
+    get_file_content(in, file_content, nb_files);
+    // print_struct(file_content, nb_files);
+    comparision(nb_files, in);
     fclose(in);
+}
+
+/**/
+static void close_output()
+{
+    if (OUTPUT != stdout)
+        fclose(OUTPUT);
 }
 
 /**
@@ -93,9 +226,11 @@ static void file_parser(char *file)
  */
 static void help(void)
 {
-    printf("Usage: tbt [-a ALGO|-o FILE|-v|-V|-h] FILE|DIR\n"
+    printf("Usage: tbt [-a ALGO|-o FILE|-c|-v|-V|-h] FILE|DIR\n"
            "Compute Fuzzy Hashing\n\n"
            " -a ALGO,--algorithm ALGO\tALGO : CTPH|LSH|ALL\n"
+           " -c ,--compareHashes\t\t\tCompare the hashes stored in the given "
+           "file\n"
            " -o FILE,--output FILE\t\twrite result to FILE\n"
            " -v,--verbose\t\t\tverbose output\n"
            " -V,--version\t\t\tdisplay version and exit\n"
@@ -146,20 +281,17 @@ static bool treat_file(char *file_path)
     /* LSH */
     fprintf(stderr, "[+] \tLSH  ...\n");
 
-    FILE *hash_storage = fopen("hash_storage.txt", "w");
-    if (f == NULL)
-        errx(EXIT_FAILURE, "Couldn't create the file to store the hashes");
-
     char *temp_file_name = strrchr(file_path, '/');
     temp_file_name = (temp_file_name == NULL) ? file_path : temp_file_name + 1;
     if (chosen_algorithm == ALL)
-        fprintf(hash_storage, "%s:\n\t1:%s\n\t2:%s\n", temp_file_name, CTPhash,
-                LShash);
+        fprintf(OUTPUT,
+                "%s:\n\t1:5f5f77656c6c5f646f6e652121215f5f\n\t2:"
+                "5f5f77656c6c5f646f6e652121215f5f\n",
+                temp_file_name);
     else
-        fprintf(hash_storage, "%s:\n\t%d:%s\n", temp_file_name,
+        fprintf(OUTPUT, "%s:\n\t%d:%s\n", temp_file_name,
                 (chosen_algorithm == CTPH) ? 1 : 2,
                 (chosen_algorithm == CTPH) ? CTPhash : LShash);
-
     /* Free Data */
     elf_free(data);
     return true;
@@ -199,12 +331,13 @@ int main(int argc, char *argv[])
 {
     /* clang-format off */
     const struct option long_opts[] = {
-        {"output"   , required_argument, NULL, 'o'},
-        {"verbose"  , no_argument      , NULL, 'v'},
-        {"version"  , no_argument      , NULL, 'V'},
-        {"help"     , no_argument      , NULL, 'h'},
-        {"algorithm", required_argument, NULL, 'a'},
-        { NULL      , 0                , NULL,  0 }
+        {"output"       , required_argument, NULL, 'o'},
+        {"compareHashes", no_argument      , NULL, 'c'},
+        {"verbose"      , no_argument      , NULL, 'v'},
+        {"version"      , no_argument      , NULL, 'V'},
+        {"help"         , no_argument      , NULL, 'h'},
+        {"algorithm"    , required_argument, NULL, 'a'},
+        { NULL          , 0                , NULL,  0 }
     };
     /* clang-format on */
 
@@ -212,9 +345,8 @@ int main(int argc, char *argv[])
     int return_code = EXIT_SUCCESS;
 
     int optc;
-    char *outputoption = "";
-    bool optionO = false;
-    const char *options = "o:vVha:";
+    char *outputoption = NULL;
+    const char *options = "o:vVha:c";
     while ((optc = getopt_long(argc, argv, options, long_opts, NULL)) != -1) {
 
         switch (optc) {
@@ -224,7 +356,6 @@ int main(int argc, char *argv[])
 
         case 'o':
             outputoption = optarg;
-            optionO = true;
             break;
 
         case 'v':
@@ -247,17 +378,30 @@ int main(int argc, char *argv[])
                      optarg);
             break;
 
+        case 'c':
+            comparision_wanted = true;
+            break;
         default:
             errx(EXIT_FAILURE, "error: invalid option '%s'!", argv[optind - 1]);
         }
     }
-    if (optionO == true)
+
+    if (argc - optind != 1)
+        errx(EXIT_FAILURE, "error: invalid number of files or directory");
+
+    if (outputoption != NULL)
         if ((OUTPUT = fopen(outputoption, "w")) == NULL)
             errx(EXIT_FAILURE, "error: can't create and/or open the file '%s'!",
                  outputoption);
 
-    if (argc - optind != 1)
-        errx(EXIT_FAILURE, "error: invalid number of files or directory");
+    /* COMPARISION MODE */
+    if (comparision_wanted == true) {
+        file_parser(argv[optind]);
+        close_output();
+        return return_code;
+    }
+
+    /* HASH CREATION MODE */
 
     /* Check file type */
     struct stat info;
@@ -284,7 +428,6 @@ int main(int argc, char *argv[])
     } else
         errx(EXIT_FAILURE, "error: invalid file");
 
-    file_parser(outputoption);
-
+    close_output();
     return return_code;
 }
