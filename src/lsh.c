@@ -39,9 +39,9 @@ uint64_t SHINGLE_SIZE[SECTION_END] =
 };
 /* clang-format on */
 
-bool lsh_sim_hash(elf_data data, uint8_t **hash, uint8_t *length)
+bool lsh_sim_hash(elf_data data, uint8_t **hash)
 {
-    if (data == NULL || hash == NULL || length == NULL)
+    if (data == NULL || hash == NULL)
         goto err_null;
 
     shingle_table_t *table = shingle_table_malloc(SHINGLE_TABLE_DEFAULT_SIZE);
@@ -112,7 +112,6 @@ bool lsh_sim_hash(elf_data data, uint8_t **hash, uint8_t *length)
 
     /* Update arguments */
     (*hash) = final_hash;
-    (*length) = MD5_LENGTH;
 
     return true;
 
@@ -148,4 +147,19 @@ void lsh_set_shingle_size(section_e sec, uint64_t new_val)
 {
     if (sec >= 0 && sec < SECTION_END)
         SHINGLE_SIZE[sec] = new_val;
+}
+
+char *lsh_sim_hash_to_string(uint8_t hash[])
+{
+    if (hash == NULL)
+        return NULL;
+
+    char *string = malloc(sizeof(char) * (SIM_HASH_SIZE * 2 + 1));
+    if (string == NULL)
+        return NULL;
+
+    for (uint8_t i = 0; i < SIM_HASH_SIZE; i++)
+        snprintf(&(string[i * 2]), 3, "%02x", hash[i]);
+
+    return string;
 }

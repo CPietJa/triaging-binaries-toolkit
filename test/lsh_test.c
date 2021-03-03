@@ -2,13 +2,7 @@
 
 #include <stdlib.h>
 
-void print_hash(uint8_t *hash, uint8_t len)
-{
-    for (uint8_t i = 0; i < len; i++)
-        printf("%02x", hash[i]);
-}
-
-void get_hash(char *file, uint8_t **hash, uint8_t *len)
+void get_hash(char *file, uint8_t **hash)
 {
     FILE *fd_file = fopen(file, "r");
 
@@ -16,7 +10,7 @@ void get_hash(char *file, uint8_t **hash, uint8_t *len)
 
     fclose(fd_file);
 
-    lsh_sim_hash(data, hash, len);
+    lsh_sim_hash(data, hash);
 
     elf_free(data);
 }
@@ -36,58 +30,55 @@ int main(void)
 
     /* Compute sim hash */
     uint8_t *hash_1 = NULL;
-    uint8_t len_1 = 0;
     uint8_t *hash_2 = NULL;
-    uint8_t len_2 = 0;
     uint8_t *hash_3 = NULL;
-    uint8_t len_3 = 0;
     uint8_t *hash_4 = NULL;
-    uint8_t len_4 = 0;
     uint8_t *hash_5 = NULL;
-    uint8_t len_5 = 0;
 
-    get_hash(elf_file_1, &hash_1, &len_1);
-    get_hash(elf_file_2, &hash_2, &len_2);
-    get_hash(elf_file_3, &hash_3, &len_3);
-    get_hash(elf_file_4, &hash_4, &len_4);
-    get_hash(elf_file_5, &hash_5, &len_5);
+    get_hash(elf_file_1, &hash_1);
+    get_hash(elf_file_2, &hash_2);
+    get_hash(elf_file_3, &hash_3);
+    get_hash(elf_file_4, &hash_4);
+    get_hash(elf_file_5, &hash_5);
 
     /* Print */
-    printf("SimHash %s = ", elf_file_1);
-    print_hash(hash_1, len_1);
-    printf("\n");
-    printf("SimHash %s = ", elf_file_2);
-    print_hash(hash_2, len_2);
-    printf("\n");
-    printf("SimHash %s = ", elf_file_3);
-    print_hash(hash_3, len_3);
-    printf("\n");
-    printf("SimHash %s = ", elf_file_4);
-    print_hash(hash_4, len_4);
-    printf("\n");
-    printf("SimHash %s = ", elf_file_5);
-    print_hash(hash_5, len_5);
-    printf("\n\n");
+    char *string_hash = NULL;
+    string_hash = lsh_sim_hash_to_string(hash_1);
+    printf("SimHash %s = %s\n", elf_file_1, string_hash);
+    free(string_hash);
+    string_hash = lsh_sim_hash_to_string(hash_2);
+    printf("SimHash %s = %s\n", elf_file_2, string_hash);
+    free(string_hash);
+    string_hash = lsh_sim_hash_to_string(hash_3);
+    printf("SimHash %s = %s\n", elf_file_3, string_hash);
+    free(string_hash);
+    string_hash = lsh_sim_hash_to_string(hash_4);
+    printf("SimHash %s = %s\n", elf_file_4, string_hash);
+    free(string_hash);
+    string_hash = lsh_sim_hash_to_string(hash_5);
+    printf("SimHash %s = %s\n\n", elf_file_5, string_hash);
+    free(string_hash);
+
     printf("--> %s - %s: %.2f %%\n", elf_file_1, elf_file_2,
-           get_percent(lsh_hamming_distance(hash_1, hash_2, len_1)));
+           get_percent(lsh_hamming_distance(hash_1, hash_2, SIM_HASH_SIZE)));
     printf("--> %s - %s: %.2f %%\n", elf_file_1, elf_file_3,
-           get_percent(lsh_hamming_distance(hash_1, hash_3, len_1)));
+           get_percent(lsh_hamming_distance(hash_1, hash_3, SIM_HASH_SIZE)));
     printf("--> %s - %s: %.2f %%\n", elf_file_1, elf_file_4,
-           get_percent(lsh_hamming_distance(hash_1, hash_4, len_1)));
+           get_percent(lsh_hamming_distance(hash_1, hash_4, SIM_HASH_SIZE)));
     printf("--> %s - %s: %.2f %%\n", elf_file_1, elf_file_5,
-           get_percent(lsh_hamming_distance(hash_1, hash_5, len_1)));
+           get_percent(lsh_hamming_distance(hash_1, hash_5, SIM_HASH_SIZE)));
     printf("--> %s - %s: %.2f %%\n", elf_file_2, elf_file_3,
-           get_percent(lsh_hamming_distance(hash_2, hash_3, len_1)));
+           get_percent(lsh_hamming_distance(hash_2, hash_3, SIM_HASH_SIZE)));
     printf("--> %s - %s: %.2f %%\n", elf_file_2, elf_file_4,
-           get_percent(lsh_hamming_distance(hash_2, hash_4, len_1)));
+           get_percent(lsh_hamming_distance(hash_2, hash_4, SIM_HASH_SIZE)));
     printf("--> %s - %s: %.2f %%\n", elf_file_2, elf_file_5,
-           get_percent(lsh_hamming_distance(hash_2, hash_5, len_1)));
+           get_percent(lsh_hamming_distance(hash_2, hash_5, SIM_HASH_SIZE)));
     printf("--> %s - %s: %.2f %%\n", elf_file_3, elf_file_4,
-           get_percent(lsh_hamming_distance(hash_3, hash_4, len_1)));
+           get_percent(lsh_hamming_distance(hash_3, hash_4, SIM_HASH_SIZE)));
     printf("--> %s - %s: %.2f %%\n", elf_file_3, elf_file_5,
-           get_percent(lsh_hamming_distance(hash_3, hash_5, len_1)));
+           get_percent(lsh_hamming_distance(hash_3, hash_5, SIM_HASH_SIZE)));
     printf("--> %s - %s: %.2f %%\n", elf_file_4, elf_file_5,
-           get_percent(lsh_hamming_distance(hash_4, hash_5, len_1)));
+           get_percent(lsh_hamming_distance(hash_4, hash_5, SIM_HASH_SIZE)));
 
     free(hash_1);
     free(hash_2);
