@@ -4,6 +4,8 @@ LIBELF=$(LIBELF_DIR)/elf.o $(LIBELF_DIR)/print.o $(LIBELF_DIR)/str.o $(LIBELF_DI
 
 EDIT_DIST_TEST_EXE=edit_dist_test
 CTPH_TEST_EXE=ctph_test
+SHINGLE_TABLE_TEST_EXE=shingle_table_test
+LSH_TEST_EXE=lsh_test
 
 INCLUDE_DIR=../include
 OBJECT_DIR=../src
@@ -17,7 +19,7 @@ LDFLAGS=-lm -lssl -lcrypto
 .PHONY: all tbt clean help
 
 # Rules and targets
-all: tbt $(EDIT_DIST_TEST_EXE) $(CTPH_TEST_EXE)
+all: tbt $(EDIT_DIST_TEST_EXE) $(CTPH_TEST_EXE) $(SHINGLE_TABLE_TEST_EXE) $(LSH_TEST_EXE)
 	
 tbt:
 	@cd ../src && $(MAKE)
@@ -34,10 +36,24 @@ $(CTPH_TEST_EXE): ctph_test.o $(OBJECT_DIR)/ctph.o $(OBJECT_DIR)/elf_manager.o $
 ctph_test.o: ctph_test.c $(INCLUDE_DIR)/ctph.h $(INCLUDE_DIR)/edit_dist.h
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c $<
 
+$(SHINGLE_TABLE_TEST_EXE): shingle_table_test.o $(OBJECT_DIR)/shingle_table.o
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+
+shingle_table_test.o: shingle_table_test.c $(INCLUDE_DIR)/shingle_table.h
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c $<
+
+$(LSH_TEST_EXE): lsh_test.o $(OBJECT_DIR)/lsh.o $(OBJECT_DIR)/shingle_table.o $(OBJECT_DIR)/elf_manager.o $(LIBELF)
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+
+lsh_test.o: lsh_test.c $(INCLUDE_DIR)/lsh.h
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c $<
+
 clean:
 	@cd ../src && $(MAKE) clean
 	@rm -f *.o
 	@rm -f $(EDIT_DIST_TEST_EXE) $(CTPH_TEST_EXE)
+	@rm -f $(SHINGLE_TABLE_TEST_EXE)
+	@rm -f $(LSH_TEST_EXE)
 
 help:
 	@echo "Usage:"
