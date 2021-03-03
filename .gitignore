@@ -61,3 +61,4 @@ dkms.conf
 test/*
 !test/*.[ch]
 !test/Makefile
+!test/samples
