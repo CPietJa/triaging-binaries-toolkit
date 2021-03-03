@@ -2,6 +2,7 @@
 #include "tbt.h"
 #include "ctph.h"
 #include "elf_manager.h"
+#include "lsh.h"
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -15,8 +16,6 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-
-#include <libelf/elf.h>
 
 /* ENUMS */
 typedef enum { ALL, CTPH, LSH } algorithm;
@@ -82,11 +81,12 @@ static bool treat_file(char *file_path)
 
     char *CTPhash = "Test CTPhash for now", *LShash = "Test LShash for now";
     /* CTPH */
-    fprintf(stderr, "[+] \tCTPH ...\n");
-    printf("[Hash] %s\n", ctph_hash(data));
+    printf("[CTPH]\t%s\n", ctph_hash(data));
 
     /* LSH */
-    fprintf(stderr, "[+] \tLSH  ...\n");
+    uint8_t *simHash;
+    lsh_sim_hash(data, &simHash);
+    printf("[LSH]\t%s\n", lsh_sim_hash_to_string(simHash));
 
     char *temp_file_name = strrchr(file_path, '/');
     temp_file_name = (temp_file_name == NULL) ? file_path : temp_file_name + 1;
