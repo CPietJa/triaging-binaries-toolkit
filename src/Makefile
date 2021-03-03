@@ -4,12 +4,12 @@ EXE=tbt
 # Usual compilation flags
 CFLAGS=-std=c11 -Wall -Wextra -g -O2 -march=native
 CPPFLAGS=-I../include -DDEBUG
-LDFLAGS=-lm
+LDFLAGS=-lm -lssl -lcrypto
 
 LIBELF_DIR=../include/libelf
 LIBELF=$(LIBELF_DIR)/elf.o $(LIBELF_DIR)/print.o $(LIBELF_DIR)/str.o $(LIBELF_DIR)/libbele/beget.o $(LIBELF_DIR)/libbele/leget.o
 
-OBJ=tbt.o elf_manager.o shingle_table.o
+OBJ=tbt.o elf_manager.o shingle_table.o lsh.o
 
 # Special rules and targets
 .PHONY: all clean help
@@ -30,6 +30,9 @@ elf_manager.o : elf_manager.c ../include/elf_manager.h $(LIBELF_DIR)/elf.h
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c $<
 
 shingle_table.o : shingle_table.c ../include/shingle_table.h
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c $<
+
+lsh.o : lsh.c ../include/lsh.h ../include/elf_manager.h
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c $<
 
 clean:
