@@ -83,6 +83,7 @@ static bool treat_file(char *file_path)
     char *CTPhash = "Test CTPhash for now", *LShash = "Test LShash for now";
     /* CTPH */
     fprintf(stderr, "[+] \tCTPH ...\n");
+    printf("[Hash] %s\n", ctph_hash(data));
 
     /* LSH */
     fprintf(stderr, "[+] \tLSH  ...\n");

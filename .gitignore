@@ -57,3 +57,8 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+test/*
+!test/*.[ch]
+!test/Makefile
+!test/samples
