@@ -1,5 +1,9 @@
 # Variables
+LIBELF_DIR=../include/libelf
+LIBELF=$(LIBELF_DIR)/elf.o $(LIBELF_DIR)/print.o $(LIBELF_DIR)/str.o $(LIBELF_DIR)/libbele/beget.o $(LIBELF_DIR)/libbele/leget.o
+
 EDIT_DIST_TEST_EXE=edit_dist_test
+CTPH_TEST_EXE=ctph_test
 
 INCLUDE_DIR=../include
 OBJECT_DIR=../src
@@ -13,7 +17,7 @@ LDFLAGS=-lm -lssl -lcrypto
 .PHONY: all tbt clean help
 
 # Rules and targets
-all: tbt $(EDIT_DIST_TEST_EXE)
+all: tbt $(EDIT_DIST_TEST_EXE) $(CTPH_TEST_EXE)
 	
 tbt:
 	@cd ../src && $(MAKE)
@@ -24,10 +28,16 @@ $(EDIT_DIST_TEST_EXE): edit_dist_test.o $(OBJECT_DIR)/edit_dist.o
 edit_dist_test.o: edit_dist_test.c $(INCLUDE_DIR)/edit_dist.h
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c $<
 
+$(CTPH_TEST_EXE): ctph_test.o $(OBJECT_DIR)/ctph.o $(OBJECT_DIR)/elf_manager.o $(LIBELF) $(OBJECT_DIR)/edit_dist.o
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+
+ctph_test.o: ctph_test.c $(INCLUDE_DIR)/ctph.h $(INCLUDE_DIR)/edit_dist.h
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c $<
+
 clean:
 	@cd ../src && $(MAKE) clean
 	@rm -f *.o
-	@rm -f $(EDIT_DIST_TEST_EXE)
+	@rm -f $(EDIT_DIST_TEST_EXE) $(CTPH_TEST_EXE)
 
 help:
 	@echo "Usage:"

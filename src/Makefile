@@ -29,7 +29,7 @@ tbt.o : tbt.c tbt.h $(LIBELF_DIR)/elf.h
 elf_manager.o : elf_manager.c ../include/elf_manager.h $(LIBELF_DIR)/elf.h
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c $<
 
-ctph.o : ctph.c ../include/ctph.h
+ctph.o : ctph.c ../include/ctph.h ../include/edit_dist.h
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c $<
 
 edit_dist.o : edit_dist.c ../include/edit_dist.h

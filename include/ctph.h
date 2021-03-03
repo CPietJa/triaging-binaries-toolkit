@@ -5,9 +5,10 @@
 
 #include <stdbool.h>
 
-#include <inttypes.h>
-
 /* Return the hash of the ELF data in Base64 */
-uint8_t *ctph_hash(elf_data data);
+char *ctph_hash(elf_data data);
+
+/* Return a score of matching between two strings */
+int ctph_compare(const char *str1, const char *str2);
 
 #endif
