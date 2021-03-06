@@ -16,6 +16,7 @@
 #include <sys/types.h>
 
 #include <libelf/elf.h>
+#include <unistd.h>
 /* DEFINES */
 #define LINE_BUF_SIZE 400
 
@@ -24,89 +25,50 @@
 /* GLOBAL VARIABLES */
 static bool verbose = false, comparision_wanted = false;
 static FILE *OUTPUT = NULL;
-static enum algorithm { ALL, CTPH, LSH } chosen_algorithm = ALL;
+static enum algorithm { ALL, CTPH, SIMHASH } chosen_algorithm = ALL;
 
 /* Structures */
 typedef struct {
     char name[LINE_BUF_SIZE];
-    char LSH_hash[33];
+    char SIMHASH_hash[33];
     char CTPH_hash[150];
 } file_info_t;
 
 /* FUNCTIONS */
-static void convert(char *hash_table, int *final_hash_conversion)
-{
-    size_t lenght = strlen(hash_table);
-    size_t i = 0, j = 0;
-    for (j = 0, i = 0; j < lenght; j += 2, i++) {
-        char tmp[3];
-        tmp[0] = hash_table[j];
-        tmp[1] = hash_table[j + 1];
-        tmp[2] = '\0';
 
-        int base = 1, final_value = 0;
-        for (int k = 2; k >= 0; k--) {
-
-            if (tmp[k] >= '0' && tmp[k] <= '9') {
-                final_value += (tmp[k] - 48) * base;
-                base *= 16;
-            } else if (tmp[k] >= 'A' && tmp[k] <= 'Z') {
-                final_value += (tmp[k] - 55) * base;
-                base *= 16;
-            } else if (tmp[k] >= 'a' && tmp[k] <= 'z') {
-                final_value += (tmp[k] - 87) * base;
-                base *= 16;
-            }
-        }
-        final_hash_conversion[i] = final_value;
-    }
-}
-
-/** DEBUG **/
-static void print_table(char *hash_table, int taille)
-{
-    uint8_t max_lenght = 16;
-    int final_hash_conversion[max_lenght];
-    convert(hash_table, final_hash_conversion);
-
-    for (uint8_t i = 0; i < max_lenght; i++) {
-        printf("%d %d %c \n", i, final_hash_conversion[i],
-               final_hash_conversion[i]);
-    }
-}
-
-static void comparision(int nb_files, FILE *in)
+static void comparision(int nb_files, file_info_t file_content[])
 {
     float matriceCTPH[nb_files][nb_files];
-    float matriceLSH[nb_files][nb_files];
+    float matriceSIMHASH[nb_files][nb_files];
     for (int i = 0; i < nb_files; i++)
         for (int j = 0; j < nb_files; j++) {
             matriceCTPH[i][j] = 0;
-            matriceLSH[i][j] = 0;
+            matriceSIMHASH[i][j] = 0;
         }
     for (int i = 0; i < nb_files; i++)
         for (int j = i + 1; j < nb_files; j++) {
             matriceCTPH[i][j] = j + 100;
-            matriceLSH[i][j] = j + 100;
+            matriceSIMHASH[i][j] = j + 100;
         }
 
+    fprintf(OUTPUT, "  ");
     for (int i = 0; i < nb_files; i++)
-        printf("%d ", i);
+        fprintf(OUTPUT, "%d ", i);
     for (int i = 0; i < nb_files; i++) {
-        printf("\n%d ", i);
+        fprintf(OUTPUT, "\n%s ", file_content[i].name);
         for (int j = 0; j < nb_files; j++)
-            printf("%f ", matriceCTPH[i][j]);
+            fprintf(OUTPUT, "%.2f ", matriceCTPH[i][j]);
     }
-
-    printf("\n\n");
+    fprintf(OUTPUT, "\n\n");
+    fprintf(OUTPUT, "  ");
     for (int i = 0; i < nb_files; i++)
-        printf("%d ", i);
+        fprintf(OUTPUT, "%d ", i);
     for (int i = 0; i < nb_files; i++) {
-        printf("\n%d ", i);
+        fprintf(OUTPUT, "\n%s ", file_content[i].name);
         for (int j = 0; j < nb_files; j++)
-            printf("%f ", matriceLSH[i][j]);
+            fprintf(OUTPUT, "%.2f ", matriceSIMHASH[i][j]);
     }
-    printf("\n");
+    fprintf(OUTPUT, "\n");
 }
 
 static uint64_t get_nb_files(FILE *in)
@@ -143,7 +105,7 @@ static void print_struct(file_info_t file_content[], uint64_t size)
         printf("%s\n", file_content[i].name);
         printf("%s\n", file_content[i].CTPH_hash);
         // for (int i = 0; i < 32; i++)
-        printf("%s\n", file_content[i].LSH_hash);
+        printf("%s\n", file_content[i].SIMHASH_hash);
         if (i != size - 1)
             printf("\n");
     }
@@ -181,7 +143,8 @@ static void get_file_content(FILE *in, file_info_t file_content[],
             else if (line_buf[i] == '2' && i != 0 && file_count > 0) {
                 for (i = i + 2, index = 0;
                      line_buf[i] != '\0' && line_buf[i] != '\n'; i++, index++) {
-                    file_content[file_count - 1].LSH_hash[index] = line_buf[i];
+                    file_content[file_count - 1].SIMHASH_hash[index] =
+                        line_buf[i];
                 }
             } else if (i == 0) {
                 for (index = 0; line_buf[i] != '\0' && line_buf[i] != '\n';
@@ -210,7 +173,7 @@ static void file_parser(char *file_name)
     file_info_t file_content[nb_files];
     get_file_content(in, file_content, nb_files);
     // print_struct(file_content, nb_files);
-    comparision(nb_files, in);
+    comparision(nb_files, file_content);
     fclose(in);
 }
 
@@ -228,7 +191,7 @@ static void help(void)
 {
     printf("Usage: tbt [-a ALGO|-o FILE|-c|-v|-V|-h] FILE|DIR\n"
            "Compute Fuzzy Hashing\n\n"
-           " -a ALGO,--algorithm ALGO\tALGO : CTPH|LSH|ALL\n"
+           " -a ALGO,--algorithm ALGO\tALGO : CTPH|SIMHASH|ALL\n"
            " -c ,--compareHashes\t\t\tCompare the hashes stored in the given "
            "file\n"
            " -o FILE,--output FILE\t\twrite result to FILE\n"
@@ -275,11 +238,12 @@ static bool treat_file(char *file_path)
             "[+] Fuzzy Hashing\n",
             file_path);
 
-    char *CTPhash = "Test CTPhash for now", *LShash = "Test LShash for now";
+    char *CTPhash = "Test CTPhash for now",
+         *SIMHASH_hash = "Test SIMHASH for now";
     /* CTPH */
     fprintf(stderr, "[+] \tCTPH ...\n");
-    /* LSH */
-    fprintf(stderr, "[+] \tLSH  ...\n");
+    /* SIMHASH */
+    fprintf(stderr, "[+] \tSIMHASH  ...\n");
 
     char *temp_file_name = strrchr(file_path, '/');
     temp_file_name = (temp_file_name == NULL) ? file_path : temp_file_name + 1;
@@ -291,7 +255,7 @@ static bool treat_file(char *file_path)
     else
         fprintf(OUTPUT, "%s:\n\t%d:%s\n", temp_file_name,
                 (chosen_algorithm == CTPH) ? 1 : 2,
-                (chosen_algorithm == CTPH) ? CTPhash : LShash);
+                (chosen_algorithm == CTPH) ? CTPhash : SIMHASH_hash);
     /* Free Data */
     elf_free(data);
     return true;
@@ -371,8 +335,9 @@ int main(int argc, char *argv[])
                 chosen_algorithm = ALL;
             else if (strcmp(optarg, "CTPH") == 0 || strcmp(optarg, "ctph") == 0)
                 chosen_algorithm = CTPH;
-            else if (strcmp(optarg, "LSH") == 0 || strcmp(optarg, "lsh") == 0)
-                chosen_algorithm = LSH;
+            else if (strcmp(optarg, "SIMHASH") == 0 ||
+                     strcmp(optarg, "simhash") == 0)
+                chosen_algorithm = SIMHASH;
             else
                 errx(EXIT_FAILURE, "-a option's [%s] argument is not valid!",
                      optarg);
@@ -389,11 +354,14 @@ int main(int argc, char *argv[])
     if (argc - optind != 1)
         errx(EXIT_FAILURE, "error: invalid number of files or directory");
 
-    if (outputoption != NULL)
+    /* Verifying if the output file already exists. If so, it's an error */
+    if (outputoption != NULL) {
+        if (access(outputoption, F_OK) == 0)
+            errx(EXIT_FAILURE, "error: File %s already exists !", outputoption);
         if ((OUTPUT = fopen(outputoption, "w")) == NULL)
             errx(EXIT_FAILURE, "error: can't create and/or open the file '%s'!",
                  outputoption);
-
+    }
     /* COMPARISION MODE */
     if (comparision_wanted == true) {
         file_parser(argv[optind]);
