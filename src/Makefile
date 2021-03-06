@@ -4,12 +4,12 @@ EXE=tbt
 # Usual compilation flags
 CFLAGS=-std=c11 -Wall -Wextra -g -O2 -march=native
 CPPFLAGS=-I../include -DDEBUG
-LDFLAGS=-lm
+LDFLAGS=-lm -lssl -lcrypto
 
 LIBELF_DIR=../include/libelf
 LIBELF=$(LIBELF_DIR)/elf.o $(LIBELF_DIR)/print.o $(LIBELF_DIR)/str.o $(LIBELF_DIR)/libbele/beget.o $(LIBELF_DIR)/libbele/leget.o
 
-OBJ=tbt.o elf_manager.o
+OBJ=tbt.o elf_manager.o ctph.o edit_dist.o shingle_table.o simhash.o
 
 # Special rules and targets
 .PHONY: all clean help
@@ -23,10 +23,22 @@ libs:
 $(EXE): $(OBJ)
 	$(CC) $(CFLAGS) -o $@ $^ $(LIBELF) $(LDFLAGS)
 
-tbt.o : tbt.c tbt.h $(LIBELF_DIR)/elf.h
+tbt.o : tbt.c tbt.h $(LIBELF_DIR)/elf.h ../include/ctph.h ../include/simhash.h
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c $<
 
 elf_manager.o : elf_manager.c ../include/elf_manager.h $(LIBELF_DIR)/elf.h
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c $<
+
+ctph.o : ctph.c ../include/ctph.h ../include/edit_dist.h
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c $<
+
+edit_dist.o : edit_dist.c ../include/edit_dist.h
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c $<
+
+shingle_table.o : shingle_table.c ../include/shingle_table.h
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c $<
+
+simhash.o : simhash.c ../include/simhash.h ../include/elf_manager.h
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c $<
 
 clean:

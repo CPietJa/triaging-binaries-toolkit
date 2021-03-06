@@ -1,6 +1,8 @@
 /* INCLUDES */
 #include "tbt.h"
+#include "ctph.h"
 #include "elf_manager.h"
+#include "simhash.h"
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -15,17 +17,17 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#include <libelf/elf.h>
 #include <unistd.h>
 /* DEFINES */
 #define LINE_BUF_SIZE 400
 
 /* ENUMS */
+typedef enum { ALL, CTPH, SIMHASH } algorithm;
 
 /* GLOBAL VARIABLES */
 static bool verbose = false, comparision_wanted = false;
 static FILE *OUTPUT = NULL;
-static enum algorithm { ALL, CTPH, SIMHASH } chosen_algorithm = ALL;
+static algorithm chosen_algorithm = ALL;
 
 /* Structures */
 typedef struct {
@@ -241,9 +243,12 @@ static bool treat_file(char *file_path)
     char *CTPhash = "Test CTPhash for now",
          *SIMHASH_hash = "Test SIMHASH for now";
     /* CTPH */
-    fprintf(stderr, "[+] \tCTPH ...\n");
-    /* SIMHASH */
-    fprintf(stderr, "[+] \tSIMHASH  ...\n");
+    printf("[CTPH]\t%s\n", ctph_hash(data));
+
+    /* LSH */
+    uint8_t *simHash;
+    simhash_compute(data, &simHash);
+    printf("[LSH]\t%s\n", simhash_to_string(simHash));
 
     char *temp_file_name = strrchr(file_path, '/');
     temp_file_name = (temp_file_name == NULL) ? file_path : temp_file_name + 1;
