@@ -2,7 +2,7 @@
 #include "tbt.h"
 #include "ctph.h"
 #include "elf_manager.h"
-#include "lsh.h"
+#include "simhash.h"
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -85,8 +85,8 @@ static bool treat_file(char *file_path)
 
     /* LSH */
     uint8_t *simHash;
-    lsh_sim_hash(data, &simHash);
-    printf("[LSH]\t%s\n", lsh_sim_hash_to_string(simHash));
+    simhash_compute(data, &simHash);
+    printf("[LSH]\t%s\n", simhash_to_string(simHash));
 
     char *temp_file_name = strrchr(file_path, '/');
     temp_file_name = (temp_file_name == NULL) ? file_path : temp_file_name + 1;

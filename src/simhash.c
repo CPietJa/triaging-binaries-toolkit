@@ -1,4 +1,4 @@
-#include "lsh.h"
+#include "simhash.h"
 
 #include <stdlib.h>
 
@@ -39,7 +39,7 @@ uint64_t SHINGLE_SIZE[SECTION_END] =
 };
 /* clang-format on */
 
-bool lsh_sim_hash(elf_data data, uint8_t **hash)
+bool simhash_compute(elf_data data, uint8_t **hash)
 {
     if (data == NULL || hash == NULL)
         goto err_null;
@@ -122,34 +122,22 @@ err_null:
     return false;
 }
 
-uint64_t lsh_hamming_distance(uint8_t *hash_1, uint8_t *hash_2, uint64_t len)
+float simhash_compare(uint8_t *hash_1, uint8_t *hash_2)
 {
-    if (hash_1 == NULL || hash_2 == NULL || len == 0)
+    if (hash_1 == NULL || hash_2 == NULL)
         return 0;
 
+    /* Compute hamming distance */
     uint64_t dist = 0;
-    for (uint64_t i = 0; i < len; i++) {
+    for (uint64_t i = 0; i < SIM_HASH_SIZE; i++) {
         uint64_t xor_val = hash_1[i] ^ hash_2[i];
         dist += __builtin_popcountll(xor_val);
     }
 
-    return dist;
+    return (1.0 - (dist / 128.0)) * 100.0;
 }
 
-uint64_t lsh_get_shingle_size(section_e sec)
-{
-    if (sec >= 0 && sec < SECTION_END)
-        return SHINGLE_SIZE[sec];
-    return 0;
-}
-
-void lsh_set_shingle_size(section_e sec, uint64_t new_val)
-{
-    if (sec >= 0 && sec < SECTION_END)
-        SHINGLE_SIZE[sec] = new_val;
-}
-
-char *lsh_sim_hash_to_string(uint8_t hash[])
+char *simhash_to_string(uint8_t hash[])
 {
     if (hash == NULL)
         return NULL;
@@ -162,4 +150,25 @@ char *lsh_sim_hash_to_string(uint8_t hash[])
         snprintf(&(string[i * 2]), 3, "%02x", hash[i]);
 
     return string;
+}
+
+uint8_t *simhash_string_to_uint(char *hash)
+{
+    if (hash == NULL)
+        return NULL;
+
+    uint8_t *hash_tab = malloc(sizeof(uint8_t) * SIM_HASH_SIZE);
+    if (hash_tab == NULL)
+        return NULL;
+
+    char tmp[5] = "0x00";
+
+    for (uint8_t i = 0; hash[i] != '\0'; i += 2) {
+        tmp[2] = hash[i];
+        tmp[3] = hash[i + 1];
+
+        hash_tab[i / 2] = strtol(tmp, NULL, 16);
+    }
+
+    return hash_tab;
 }

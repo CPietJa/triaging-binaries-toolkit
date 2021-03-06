@@ -9,7 +9,7 @@ LDFLAGS=-lm -lssl -lcrypto
 LIBELF_DIR=../include/libelf
 LIBELF=$(LIBELF_DIR)/elf.o $(LIBELF_DIR)/print.o $(LIBELF_DIR)/str.o $(LIBELF_DIR)/libbele/beget.o $(LIBELF_DIR)/libbele/leget.o
 
-OBJ=tbt.o elf_manager.o ctph.o edit_dist.o shingle_table.o lsh.o
+OBJ=tbt.o elf_manager.o ctph.o edit_dist.o shingle_table.o simhash.o
 
 # Special rules and targets
 .PHONY: all clean help
@@ -23,7 +23,7 @@ libs:
 $(EXE): $(OBJ)
 	$(CC) $(CFLAGS) -o $@ $^ $(LIBELF) $(LDFLAGS)
 
-tbt.o : tbt.c tbt.h $(LIBELF_DIR)/elf.h
+tbt.o : tbt.c tbt.h $(LIBELF_DIR)/elf.h ../include/ctph.h ../include/simhash.h
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c $<
 
 elf_manager.o : elf_manager.c ../include/elf_manager.h $(LIBELF_DIR)/elf.h
@@ -38,7 +38,7 @@ edit_dist.o : edit_dist.c ../include/edit_dist.h
 shingle_table.o : shingle_table.c ../include/shingle_table.h
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c $<
 
-lsh.o : lsh.c ../include/lsh.h ../include/elf_manager.h
+simhash.o : simhash.c ../include/simhash.h ../include/elf_manager.h
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c $<
 
 clean:
