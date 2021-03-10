@@ -40,37 +40,47 @@ typedef struct {
 
 static void comparision(int nb_files, file_info_t file_content[])
 {
-    float matriceCTPH[nb_files][nb_files];
-    float matriceSIMHASH[nb_files][nb_files];
-    for (int i = 0; i < nb_files; i++)
-        for (int j = 0; j < nb_files; j++) {
-            matriceCTPH[i][j] = 0;
-            matriceSIMHASH[i][j] = 0;
-        }
-    for (int i = 0; i < nb_files; i++)
-        for (int j = i + 1; j < nb_files; j++) {
-            matriceCTPH[i][j] = j + 100;
-            matriceSIMHASH[i][j] = j + 100;
+    if (chosen_algorithm == ALL || chosen_algorithm == CTPH) {
+        fprintf(OUTPUT, "--- CTPH ---\n");
+
+        for (int i = 0; i < nb_files; i++) {
+            fprintf(OUTPUT, "\n%s\n", file_content[i].name);
+            for (int j = 0; j < nb_files; j++) {
+                if (strcmp(file_content[i].name, file_content[j].name) == 0)
+                    continue;
+                int res = ctph_compare(file_content[i].CTPH_hash,
+                                       file_content[j].CTPH_hash);
+                if (res == 0)
+                    continue;
+                fprintf(OUTPUT, "[ %03d %% ] %s\n", res, file_content[j].name);
+            }
         }
 
-    fprintf(OUTPUT, "  ");
-    for (int i = 0; i < nb_files; i++)
-        fprintf(OUTPUT, "%d ", i);
-    for (int i = 0; i < nb_files; i++) {
-        fprintf(OUTPUT, "\n%s ", file_content[i].name);
-        for (int j = 0; j < nb_files; j++)
-            fprintf(OUTPUT, "%.2f ", matriceCTPH[i][j]);
+        fprintf(OUTPUT, "\n");
     }
-    fprintf(OUTPUT, "\n\n");
-    fprintf(OUTPUT, "  ");
-    for (int i = 0; i < nb_files; i++)
-        fprintf(OUTPUT, "%d ", i);
-    for (int i = 0; i < nb_files; i++) {
-        fprintf(OUTPUT, "\n%s ", file_content[i].name);
-        for (int j = 0; j < nb_files; j++)
-            fprintf(OUTPUT, "%.2f ", matriceSIMHASH[i][j]);
+    if (chosen_algorithm == ALL || chosen_algorithm == SIMHASH) {
+
+        fprintf(OUTPUT, "--- SIMHASH ---\n");
+        uint8_t *hash_uintI = NULL, *hash_uintJ = NULL;
+        for (int i = 0; i < nb_files; i++) {
+            fprintf(OUTPUT, "\n%s\n", file_content[i].name);
+            hash_uintI = simhash_string_to_uint(file_content[i].SIMHASH_hash);
+
+            for (int j = 0; j < nb_files; j++) {
+                if (strcmp(file_content[i].name, file_content[j].name) == 0)
+                    continue;
+                hash_uintJ =
+                    simhash_string_to_uint(file_content[j].SIMHASH_hash);
+
+                fprintf(OUTPUT, "[ %06.02f %% ] %s\n",
+                        simhash_compare(hash_uintI, hash_uintJ),
+                        file_content[j].name);
+
+                free(hash_uintJ);
+            }
+            free(hash_uintI);
+        }
     }
-    fprintf(OUTPUT, "\n");
 }
 
 static uint64_t get_nb_files(FILE *in)
@@ -140,6 +150,7 @@ static void get_file_content(FILE *in, file_info_t file_content[],
                      line_buf[i] != '\0' && line_buf[i] != '\n'; i++, index++) {
                     file_content[file_count - 1].CTPH_hash[index] = line_buf[i];
                 }
+                file_content[file_count - 1].CTPH_hash[index] = '\0';
             }
 
             else if (line_buf[i] == '2' && i != 0 && file_count > 0) {
@@ -148,12 +159,14 @@ static void get_file_content(FILE *in, file_info_t file_content[],
                     file_content[file_count - 1].SIMHASH_hash[index] =
                         line_buf[i];
                 }
+                file_content[file_count - 1].SIMHASH_hash[index] = '\0';
+
             } else if (i == 0) {
                 for (index = 0; line_buf[i] != '\0' && line_buf[i] != '\n';
                      i++, index++) {
                     file_content[file_count].name[index] = line_buf[i];
                 }
-
+                file_content[file_count].name[index - 1] = '\0';
                 file_count++;
 
                 i++;
@@ -174,7 +187,6 @@ static void file_parser(char *file_name)
     uint64_t nb_files = get_nb_files(in);
     file_info_t file_content[nb_files];
     get_file_content(in, file_content, nb_files);
-    // print_struct(file_content, nb_files);
     comparision(nb_files, file_content);
     fclose(in);
 }
@@ -240,28 +252,28 @@ static bool treat_file(char *file_path)
             "[+] Fuzzy Hashing\n",
             file_path);
 
-    char *CTPhash = "Test CTPhash for now",
-         *SIMHASH_hash = "Test SIMHASH for now";
     /* CTPH */
-    printf("[CTPH]\t%s\n", ctph_hash(data));
+    char *CTPhash = ctph_hash(data);
 
     /* LSH */
-    uint8_t *simHash;
+    uint8_t *simHash = NULL;
     simhash_compute(data, &simHash);
-    printf("[LSH]\t%s\n", simhash_to_string(simHash));
+    char *SIMHASHash = simhash_to_string(simHash);
 
     char *temp_file_name = strrchr(file_path, '/');
     temp_file_name = (temp_file_name == NULL) ? file_path : temp_file_name + 1;
+
     if (chosen_algorithm == ALL)
         fprintf(OUTPUT,
-                "%s:\n\t1:5f5f77656c6c5f646f6e652121215f5f\n\t2:"
-                "5f5f77656c6c5f646f6e652121215f5f\n",
-                temp_file_name);
+                "%s:\n\t1:%s\n\t2:"
+                "%s\n",
+                temp_file_name, CTPhash, SIMHASHash);
     else
         fprintf(OUTPUT, "%s:\n\t%d:%s\n", temp_file_name,
                 (chosen_algorithm == CTPH) ? 1 : 2,
-                (chosen_algorithm == CTPH) ? CTPhash : SIMHASH_hash);
+                (chosen_algorithm == CTPH) ? CTPhash : SIMHASHash);
     /* Free Data */
+    free(SIMHASHash);
     elf_free(data);
     return true;
 }
