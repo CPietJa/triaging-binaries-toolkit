@@ -147,24 +147,24 @@ static uint64_t get_nb_files(FILE *in)
 }
 
 /* DEBUG STRUCT PRINT */
-static void print_struct(file_info_t file_content[], uint64_t size)
-{
-    for (uint64_t i = 0; i < size; i++) {
-        printf("%s\n", file_content[i].name);
-        printf("%s\n", file_content[i].CTPH_hash);
-        // for (int i = 0; i < 32; i++)
-        printf("%s\n", file_content[i].SIMHASH_hash);
-        if (i != size - 1)
-            printf("\n");
-    }
-}
+// static void print_struct(file_info_t file_content[], uint64_t size)
+// {
+//     for (uint64_t i = 0; i < size; i++) {
+//         printf("%s\n", file_content[i].name);
+//         printf("%s\n", file_content[i].CTPH_hash);
+//         // for (int i = 0; i < 32; i++)
+//         printf("%s\n", file_content[i].SIMHASH_hash);
+//         if (i != size - 1)
+//             printf("\n");
+//     }
+// }
 
 static void get_file_content(FILE *in, file_info_t file_content[],
                              uint64_t nb_files)
 {
 
     char line_buf[LINE_BUF_SIZE];
-    int file_count = 0;
+    uint64_t file_count = 0;
 
     /* Returning to the beginning of the file */
     if (fseek(in, 0, SEEK_SET) != 0)
@@ -175,6 +175,9 @@ static void get_file_content(FILE *in, file_info_t file_content[],
             fprintf(stderr, "Reading error with code %d\n", errno);
             break;
         }
+        if (file_count > nb_files)
+            errx(EXIT_FAILURE, "Wrong number of entry in the file");
+
         int i = 0, index = 0;
         while (line_buf[i] != '\0') {
 
@@ -306,6 +309,8 @@ static bool treat_file(char *file_path)
                 (chosen_algorithm == CTPH) ? 1 : 2,
                 (chosen_algorithm == CTPH) ? CTPhash : SIMHASHash);
     /* Free Data */
+    free(CTPhash);
+    free(simHash);
     free(SIMHASHash);
     elf_free(data);
     return true;
