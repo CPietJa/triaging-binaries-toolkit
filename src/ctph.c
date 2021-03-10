@@ -382,8 +382,8 @@ int ctph_compare(const char *str1, const char *str2)
         return -1;
 
     // each spamsum is prefixed by its block size
-    if (sscanf(str1, "%lu:", &block_size1) != 1 ||
-        sscanf(str2, "%lu:", &block_size2) != 1) {
+    if (sscanf(str1, "%" PRIu64 ":", &block_size1) != 1 ||
+        sscanf(str2, "%" PRIu64 ":", &block_size2) != 1) {
         return -1;
     }
 
