@@ -218,12 +218,13 @@ int main()
             free(sh.buffer);
         }
     }
-    printf("[!] Insertions: %lu\n", count);
+    printf("[!] Insertions: %" PRIu64 "\n", count);
 
     printf("[+] Expand table...\n");
     shingle_table_expand_size(&big_table);
-    printf("[!] New size: %lu\n", shingle_table_get_size(big_table));
-    printf("[!] Nb elements: %lu\n", shingle_table_get_elt_nb(big_table));
+    printf("[!] New size: %" PRIu64 "\n", shingle_table_get_size(big_table));
+    printf("[!] Nb elements: %" PRIu64 "\n",
+           shingle_table_get_elt_nb(big_table));
 
     printf("[+] Fully fill the table...\n");
     count = 0;
@@ -240,7 +241,7 @@ int main()
             free(sh.buffer);
         }
     }
-    printf("[!] Insertions: %lu\n", count);
+    printf("[!] Insertions: %" PRIu64 "\n", count);
 
     printf("[+] Remove all elements...\n");
     count = 0;
@@ -257,7 +258,7 @@ int main()
             break;
         }
     }
-    printf("[!] Deletions: %lu\n", count);
+    printf("[!] Deletions: %" PRIu64 "\n", count);
 
     printf("[+] Free table...\n");
     shingle_table_free(big_table);

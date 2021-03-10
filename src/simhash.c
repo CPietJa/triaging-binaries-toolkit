@@ -133,8 +133,18 @@ float simhash_compare(uint8_t *hash_1, uint8_t *hash_2)
         uint64_t xor_val = hash_1[i] ^ hash_2[i];
         dist += __builtin_popcountll(xor_val);
     }
+    float res = (1.0 - (dist / 128.0)) * 100.0;
 
-    return (1.0 - (dist / 128.0)) * 100.0;
+    /* Rescale result */
+    if (res < 50)
+        res = 50.0;
+
+    float min = 0.0;
+    float max = 100.0;
+    float threshold = 50.0;
+    res = ((max - min) * (res - threshold)) / (max - threshold) + min;
+
+    return res;
 }
 
 char *simhash_to_string(uint8_t hash[])
