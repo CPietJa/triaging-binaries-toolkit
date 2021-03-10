@@ -36,23 +36,46 @@ typedef struct {
     char CTPH_hash[150];
 } file_info_t;
 
+typedef struct {
+    char *name;
+    float percentage;
+} res_comp_t;
+
 /* FUNCTIONS */
+static int compare_result(const void *res_1, const void *res_2)
+{
+    return ((res_comp_t *) res_2)->percentage -
+           ((res_comp_t *) res_1)->percentage;
+}
 
 static void comparision(int nb_files, file_info_t file_content[])
 {
+    res_comp_t results[nb_files];
+
     if (chosen_algorithm == ALL || chosen_algorithm == CTPH) {
         fprintf(OUTPUT, "--- CTPH ---\n");
 
         for (int i = 0; i < nb_files; i++) {
-            fprintf(OUTPUT, "\n%s\n", file_content[i].name);
+            fprintf(OUTPUT, "\n%s :\n", file_content[i].name);
+
+            /* Sort result */
             for (int j = 0; j < nb_files; j++) {
-                if (strcmp(file_content[i].name, file_content[j].name) == 0)
+                results[j].name = file_content[j].name;
+                results[j].percentage = (float) ctph_compare(
+                    file_content[i].CTPH_hash, file_content[j].CTPH_hash);
+            }
+
+            qsort(results, nb_files, sizeof(res_comp_t), compare_result);
+
+            /* Print */
+            for (int j = 0; j < nb_files; j++) {
+                if (strcmp(file_content[i].name, results[j].name) == 0)
                     continue;
-                int res = ctph_compare(file_content[i].CTPH_hash,
-                                       file_content[j].CTPH_hash);
-                if (res == 0)
+                if (results[j].percentage == 0.0)
                     continue;
-                fprintf(OUTPUT, "[ %03d %% ] %s\n", res, file_content[j].name);
+
+                fprintf(OUTPUT, "[ %03.f %% ] %s\n", results[j].percentage,
+                        results[j].name);
             }
         }
 
@@ -63,21 +86,34 @@ static void comparision(int nb_files, file_info_t file_content[])
         fprintf(OUTPUT, "--- SIMHASH ---\n");
         uint8_t *hash_uintI = NULL, *hash_uintJ = NULL;
         for (int i = 0; i < nb_files; i++) {
-            fprintf(OUTPUT, "\n%s\n", file_content[i].name);
+            fprintf(OUTPUT, "\n%s :\n", file_content[i].name);
             hash_uintI = simhash_string_to_uint(file_content[i].SIMHASH_hash);
 
+            /* Sort result */
             for (int j = 0; j < nb_files; j++) {
-                if (strcmp(file_content[i].name, file_content[j].name) == 0)
-                    continue;
+
                 hash_uintJ =
                     simhash_string_to_uint(file_content[j].SIMHASH_hash);
 
-                fprintf(OUTPUT, "[ %06.02f %% ] %s\n",
-                        simhash_compare(hash_uintI, hash_uintJ),
-                        file_content[j].name);
+                results[j].name = file_content[j].name;
+                results[j].percentage = simhash_compare(hash_uintI, hash_uintJ);
 
                 free(hash_uintJ);
             }
+
+            qsort(results, nb_files, sizeof(res_comp_t), compare_result);
+
+            /* Print */
+            for (int j = 0; j < nb_files; j++) {
+                if (strcmp(file_content[i].name, results[j].name) == 0)
+                    continue;
+                if (results[j].percentage == 0.0)
+                    continue;
+
+                fprintf(OUTPUT, "[ %06.02f %% ] %s\n", results[j].percentage,
+                        results[j].name);
+            }
+
             free(hash_uintI);
         }
     }
@@ -247,10 +283,7 @@ static bool treat_file(char *file_path)
         return false;
 
     /* Compute Fuzzy Hashing */
-    fprintf(stderr,
-            "[+] File '%s'\n"
-            "[+] Fuzzy Hashing\n",
-            file_path);
+    fprintf(stderr, "[+] Fuzzy hashing of '%s'\n", file_path);
 
     /* CTPH */
     char *CTPhash = ctph_hash(data);
@@ -395,7 +428,7 @@ int main(int argc, char *argv[])
         errx(EXIT_FAILURE, "error: cannot access '%s'", argv[optind]);
 
     if (S_ISDIR(info.st_mode)) {
-        fprintf(stderr, "'%s' is a directory\n", argv[optind]);
+        fprintf(stderr, "[+] '%s' is a directory\n", argv[optind]);
 
         char dir_path[2048];
         uint16_t i = strlen(argv[optind]);
@@ -407,7 +440,7 @@ int main(int argc, char *argv[])
         if (!treat_dir(dir_path))
             return_code = EXIT_FAILURE;
     } else if (S_ISREG(info.st_mode)) {
-        fprintf(stderr, "'%s' is a regular file\n", argv[optind]);
+        fprintf(stderr, "[+] '%s' is a regular file\n", argv[optind]);
         if (!treat_file(argv[optind]))
             errx(EXIT_FAILURE, "error: '%s' is an invalid file", argv[optind]);
     } else
