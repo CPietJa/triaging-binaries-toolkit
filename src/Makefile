@@ -2,7 +2,7 @@
 EXE=tbt
 
 # Usual compilation flags
-CFLAGS=-std=c11 -Wall -Wextra -g -O2 -march=native
+CFLAGS=-std=c11 -Wall -Wextra -Wformat-security -g -O2 -march=native
 CPPFLAGS=-I../include -DDEBUG
 LDFLAGS=-lm -lssl -lcrypto
 
