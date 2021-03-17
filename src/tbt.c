@@ -130,7 +130,6 @@ static uint64_t get_nb_files(FILE *in)
 
     /* Get nb_files */
     fgets(line_buf, LINE_BUF_SIZE, in);
-
     while (!feof(in)) {
         if (ferror(in)) {
             fprintf(stderr, "Reading error with code %d\n", errno);
@@ -138,10 +137,10 @@ static uint64_t get_nb_files(FILE *in)
         }
         if (line_buf[0] == '\t')
             fgets(line_buf, LINE_BUF_SIZE, in);
-        else
+        else {
             nb_files++;
-
-        fgets(line_buf, LINE_BUF_SIZE, in);
+            fgets(line_buf, LINE_BUF_SIZE, in);
+        }
     }
     return nb_files;
 }
