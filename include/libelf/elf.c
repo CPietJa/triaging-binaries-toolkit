@@ -139,8 +139,8 @@ static int readelf32ehdr(FILE *f, Fhdr *fp)
     }
 
     if (fp->phentsize != e.phentsize) {
-        fprintf(stderr, "phentsize mismatch; want %u; got %u\n", fp->ehsize,
-                e.ehsize);
+        /*fprintf(stderr, "phentsize mismatch; want %u; got %u\n", fp->ehsize,
+                e.ehsize);*/
         return -1;
     }
 
@@ -213,8 +213,8 @@ static int readelf64ehdr(FILE *f, Fhdr *fp)
     }
 
     if (fp->phentsize != e.phentsize) {
-        fprintf(stderr, "phentsize mismatch; want %u; got %u\n", fp->ehsize,
-                e.ehsize);
+        /*fprintf(stderr, "phentsize mismatch; want %u; got %u\n", fp->ehsize,
+                e.ehsize);*/
         return -1;
     }
 
