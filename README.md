@@ -50,14 +50,14 @@ make test
 ```
 
 ## Executable
-```shell
+```
 Usage: tbt [-a ALGO|-o FILE|-c|-v|-V|-h] FILE|DIR
 Compute Fuzzy Hashing
 
  -a ALGO,--algorithm ALGO       ALGO : CTPH|SIMHASH|ALL
- -c ,--compareHashes			Compare the hashes stored in the given file
- -o FILE,--output FILE		    write result to FILE
- -v,--verbose			        verbose output
- -V,--version			        display version and exit
- -h,--help			            display this help
+ -c ,--compareHashes            Compare the hashes stored in the given file
+ -o FILE,--output FILE          write result to FILE
+ -v,--verbose                   verbose output
+ -V,--version                   display version and exit
+ -h,--help                      display this help
 ```
