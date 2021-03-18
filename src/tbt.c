@@ -164,6 +164,7 @@ static void get_file_content(FILE *in, file_info_t file_content[],
 
     char line_buf[LINE_BUF_SIZE];
     uint64_t file_count = 0;
+    int ctph_present = false, simhash_present = false;
 
     /* Returning to the beginning of the file */
     if (fseek(in, 0, SEEK_SET) != 0)
@@ -188,15 +189,18 @@ static void get_file_content(FILE *in, file_info_t file_content[],
                      line_buf[i] != '\0' && line_buf[i] != '\n'; i++, index++) {
                     file_content[file_count - 1].CTPH_hash[index] = line_buf[i];
                 }
+                ctph_present = true;
                 file_content[file_count - 1].CTPH_hash[index] = '\0';
             }
 
             else if (line_buf[i] == '2' && i != 0 && file_count > 0) {
                 for (i = i + 2, index = 0;
                      line_buf[i] != '\0' && line_buf[i] != '\n'; i++, index++) {
+
                     file_content[file_count - 1].SIMHASH_hash[index] =
                         line_buf[i];
                 }
+                simhash_present = true;
                 file_content[file_count - 1].SIMHASH_hash[index] = '\0';
 
             } else if (i == 0) {
@@ -214,6 +218,28 @@ static void get_file_content(FILE *in, file_info_t file_content[],
         }
         fgets(line_buf, LINE_BUF_SIZE, in);
     }
+    if (!ctph_present) {
+        if (chosen_algorithm == CTPH)
+            errx(EXIT_FAILURE,
+                 "error: There is not hash for CTPH in this file");
+    }
+    if (!simhash_present) {
+        if (chosen_algorithm == SIMHASH)
+            errx(EXIT_FAILURE,
+                 "error: There is not hash for SIMHASH in this file");
+    }
+    if (chosen_algorithm == ALL) {
+        if (!ctph_present && simhash_present)
+            chosen_algorithm = SIMHASH;
+        if (!simhash_present && ctph_present)
+            chosen_algorithm = CTPH;
+    }
+    // if (ctph_present && simhash_present)
+    //     chosen_algorithm = ALL;
+    // else if (ctph_present)
+    //     chosen_algorithm = CTPH;
+    // else if (simhash_present)
+    //     chosen_algorithm = SIMHASH;
 }
 
 static void file_parser(char *file_name)
