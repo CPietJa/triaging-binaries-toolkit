@@ -71,7 +71,7 @@ Compute hash
 Content of hash.txt
 ```
 edit_dist_test:
-    1:2:QXX5dffXXPXrVd5NfznlfPLBl3N1fPLBl3dffftDfjLffftzfjZzffrzXXrLBlX:cPXv5Nx9Pv5Pv3fff7BJdNVbv9ff33jnTfZpTfffX3ZffHffLXRffXRff3vjdjX
+	1:2:QXX5dffXXPXrVd5NfznlfPLBl3N1fPLBl3dffftDfjLffftzfjZzffrzXXrLBlX:cPXv5Nx9Pv5Pv3fff7BJdNVbv9ff33jnTfZpTfffX3ZffHffLXRffXRff3vjdjX
 	2:36214d5d90e8f5a0cd8149e3779fbde6
 simhash_test:
 	1:256:EfffJNb5AUTrVqlO/hclZiPw4kfffF//fffUZghqb8HZvWoC63OxT2nsT7xLOKK:MNmOay6ZidMhqb8HV4xTHdOlOU5
