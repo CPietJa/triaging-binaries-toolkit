@@ -337,7 +337,7 @@ static bool treat_file(char *file_path)
     char *temp_file_name = strrchr(file_path, '/');
     temp_file_name = (temp_file_name == NULL) ? file_path : temp_file_name + 1;
 
-    /* Write the hash(es) in the ouput */
+    /* Write the hash(es) in the output */
     if (chosen_algorithm == ALL)
         fprintf(OUTPUT,
                 "%s:\n\t1:%s\n\t2:"
