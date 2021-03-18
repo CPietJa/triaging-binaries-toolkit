@@ -224,7 +224,9 @@ static void get_file_content(FILE *in, file_info_t file_content[],
 
         int i = 0, index = 0;
         while (line_buf[i] != '\0') {
-
+            /** Checks if the content of the line is 1 (CTPH)
+             * if yes stores it
+             */
             if (line_buf[i] == '\t') {
                 while (line_buf[i] != '1' && line_buf[i] != '2')
                     i++;
@@ -236,7 +238,9 @@ static void get_file_content(FILE *in, file_info_t file_content[],
                 ctph_present = true;
                 file_content[file_count - 1].CTPH_hash[index] = '\0';
             }
-
+            /** Checks if the content of the line is 2 (SIMHASH)
+             * if yes stores it
+             */
             else if (line_buf[i] == '2' && i != 0 && file_count > 0) {
                 for (i = i + 2, index = 0;
                      line_buf[i] != '\0' && line_buf[i] != '\n'; i++, index++) {
@@ -246,8 +250,11 @@ static void get_file_content(FILE *in, file_info_t file_content[],
                 }
                 simhash_present = true;
                 file_content[file_count - 1].SIMHASH_hash[index] = '\0';
-
-            } else if (i == 0) {
+            }
+            /** Checks if the content of the line is the name of the file,
+             * if yes, Stores it
+             */
+            else if (i == 0) {
                 for (index = 0; line_buf[i] != '\0' && line_buf[i] != '\n';
                      i++, index++) {
                     file_content[file_count].name[index] = line_buf[i];
@@ -262,6 +269,7 @@ static void get_file_content(FILE *in, file_info_t file_content[],
         }
         fgets(line_buf, LINE_BUF_SIZE, in);
     }
+    /* check which algorithm was required and if present in the file */
     if (!ctph_present) {
         if (chosen_algorithm == CTPH)
             errx(EXIT_FAILURE,
@@ -329,6 +337,7 @@ static bool treat_file(char *file_path)
     char *temp_file_name = strrchr(file_path, '/');
     temp_file_name = (temp_file_name == NULL) ? file_path : temp_file_name + 1;
 
+    /* Write the hash(es) in the ouput */
     if (chosen_algorithm == ALL)
         fprintf(OUTPUT,
                 "%s:\n\t1:%s\n\t2:"
