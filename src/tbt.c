@@ -82,23 +82,17 @@ static void comparision(int nb_files, file_info_t file_content[])
         fprintf(OUTPUT, "\n");
     }
     if (chosen_algorithm == ALL || chosen_algorithm == SIMHASH) {
-
         fprintf(OUTPUT, "--- SIMHASH ---\n");
-        uint8_t *hash_uintI = NULL, *hash_uintJ = NULL;
+
         for (int i = 0; i < nb_files; i++) {
             fprintf(OUTPUT, "\n%s :\n", file_content[i].name);
-            hash_uintI = simhash_string_to_uint(file_content[i].SIMHASH_hash);
 
             /* Sort result */
             for (int j = 0; j < nb_files; j++) {
 
-                hash_uintJ =
-                    simhash_string_to_uint(file_content[j].SIMHASH_hash);
-
                 results[j].name = file_content[j].name;
-                results[j].percentage = simhash_compare(hash_uintI, hash_uintJ);
-
-                free(hash_uintJ);
+                results[j].percentage = simhash_compare(
+                    file_content[i].SIMHASH_hash, file_content[j].SIMHASH_hash);
             }
 
             qsort(results, nb_files, sizeof(res_comp_t), compare_result);
@@ -113,8 +107,6 @@ static void comparision(int nb_files, file_info_t file_content[])
                 fprintf(OUTPUT, "[ %06.02f %% ] %s\n", results[j].percentage,
                         results[j].name);
             }
-
-            free(hash_uintI);
         }
     }
 }
@@ -234,12 +226,6 @@ static void get_file_content(FILE *in, file_info_t file_content[],
         if (!simhash_present && ctph_present)
             chosen_algorithm = CTPH;
     }
-    // if (ctph_present && simhash_present)
-    //     chosen_algorithm = ALL;
-    // else if (ctph_present)
-    //     chosen_algorithm = CTPH;
-    // else if (simhash_present)
-    //     chosen_algorithm = SIMHASH;
 }
 
 static void file_parser(char *file_name)
@@ -317,9 +303,7 @@ static bool treat_file(char *file_path)
     char *CTPhash = ctph_hash(data);
 
     /* LSH */
-    uint8_t *simHash = NULL;
-    simhash_compute(data, &simHash);
-    char *SIMHASHash = simhash_to_string(simHash);
+    char *simHash = simhash_compute(data);
 
     char *temp_file_name = strrchr(file_path, '/');
     temp_file_name = (temp_file_name == NULL) ? file_path : temp_file_name + 1;
@@ -328,15 +312,14 @@ static bool treat_file(char *file_path)
         fprintf(OUTPUT,
                 "%s:\n\t1:%s\n\t2:"
                 "%s\n",
-                temp_file_name, CTPhash, SIMHASHash);
+                temp_file_name, CTPhash, simHash);
     else
         fprintf(OUTPUT, "%s:\n\t%d:%s\n", temp_file_name,
                 (chosen_algorithm == CTPH) ? 1 : 2,
-                (chosen_algorithm == CTPH) ? CTPhash : SIMHASHash);
+                (chosen_algorithm == CTPH) ? CTPhash : simHash);
     /* Free Data */
     free(CTPhash);
     free(simHash);
-    free(SIMHASHash);
     elf_free(data);
     return true;
 }
