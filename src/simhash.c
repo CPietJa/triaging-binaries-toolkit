@@ -6,6 +6,8 @@
 
 #include "shingle_table.h"
 
+#define SIM_HASH_SIZE 16
+
 /* clang-format off */
 // uint64_t SHINGLE_SIZE[SECTION_END] =
 // {
@@ -33,13 +35,14 @@ uint64_t SHINGLE_SIZE[SECTION_END] =
     [PLT]       = 100,
     [PLT_GOT]   = 10,
     [FINI]      = 2,
-    [TEXT]      = 100000,
-    [RODATA]    = 100000,
-    [DATA]      = 100000
+    [TEXT]      = UINT64_MAX,
+    [RODATA]    = UINT64_MAX,
+    [DATA]      = UINT64_MAX
 };
 /* clang-format on */
 
-bool simhash_compute(elf_data data, uint8_t **hash)
+/* Static Functions */
+static bool compute_hash(elf_data data, uint8_t **hash)
 {
     if (data == NULL || hash == NULL)
         goto err_null;
@@ -122,7 +125,7 @@ err_null:
     return false;
 }
 
-float simhash_compare(uint8_t *hash_1, uint8_t *hash_2)
+static float compare_hash(uint8_t *hash_1, uint8_t *hash_2)
 {
     if (hash_1 == NULL || hash_2 == NULL)
         return 0;
@@ -147,7 +150,7 @@ float simhash_compare(uint8_t *hash_1, uint8_t *hash_2)
     return res;
 }
 
-char *simhash_to_string(uint8_t hash[])
+static char *simhash_to_string(uint8_t hash[])
 {
     if (hash == NULL)
         return NULL;
@@ -162,7 +165,7 @@ char *simhash_to_string(uint8_t hash[])
     return string;
 }
 
-uint8_t *simhash_string_to_uint(char *hash)
+static uint8_t *simhash_string_to_uint(char *hash)
 {
     if (hash == NULL)
         return NULL;
@@ -181,4 +184,43 @@ uint8_t *simhash_string_to_uint(char *hash)
     }
 
     return hash_tab;
+}
+
+/* Extern Functions */
+
+char *simhash_compute(elf_data data)
+{
+    uint8_t *hash = NULL;
+
+    if (compute_hash(data, &hash) == false)
+        return NULL;
+
+    char *string = simhash_to_string(hash);
+
+    free(hash);
+
+    return string;
+}
+
+float simhash_compare(char *hash_1, char *hash_2)
+{
+    if (hash_1 == NULL || hash_2 == NULL)
+        return 0.0;
+
+    uint8_t *hash_1_uint = simhash_string_to_uint(hash_1);
+    if (hash_1_uint == NULL)
+        return 0.0;
+
+    uint8_t *hash_2_uint = simhash_string_to_uint(hash_2);
+    if (hash_2_uint == NULL) {
+        free(hash_1_uint);
+        return 0.0;
+    }
+
+    float res = compare_hash(hash_1_uint, hash_2_uint);
+
+    free(hash_1_uint);
+    free(hash_2_uint);
+
+    return res;
 }
