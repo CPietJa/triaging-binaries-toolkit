@@ -50,9 +50,9 @@ def main():
     check = True
 
     print("\n-----( Test )-----")
-    check &= test("../tbt ./ -o all_test", file_exist="all_test")
-    check &= test("../tbt . -a CTPH -o ctph_H_test", file_exist="ctph_H_test")
-    check &= test("../tbt . -a SIMHASH -o simhash_H_test",
+    check &= test("../tbt samples -o all_test", file_exist="all_test")
+    check &= test("../tbt samples -a CTPH -o ctph_H_test", file_exist="ctph_H_test")
+    check &= test("../tbt samples -a SIMHASH -o simhash_H_test",
                   file_exist="simhash_H_test")
     check &= test("../tbt -c ctph_H_test -a SIMHASH",
                   check_returncode=-1, check_stderr=True)
