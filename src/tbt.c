@@ -42,12 +42,54 @@ typedef struct {
 } res_comp_t;
 
 /* FUNCTIONS */
+
+/**
+ * Closing OUTPUT if is a file
+ */
+static void close_output()
+{
+    if (OUTPUT != stdout)
+        fclose(OUTPUT);
+}
+
+/**
+ * Display the help and exit.
+ */
+static void help(void)
+{
+    printf("Usage: tbt [-a ALGO|-o FILE|-c|-v|-V|-h] FILE|DIR\n"
+           "Compute Fuzzy Hashing\n\n"
+           " -a ALGO,--algorithm ALGO\tALGO : CTPH|SIMHASH|ALL\n"
+           " -c ,--compareHashes\t\tCompare the hashes stored in the given "
+           "file\n"
+           " -o FILE,--output FILE\t\twrite result to FILE\n"
+           " -v,--verbose\t\t\tverbose output\n"
+           " -V,--version\t\t\tdisplay version and exit\n"
+           " -h,--help\t\t\tdisplay this help\n");
+
+    exit(EXIT_SUCCESS);
+}
+
+/**
+ * Display the program's version and exit.
+ */
+static void version(void)
+{
+    printf("Triaging Binaries Toolkit %d.%d.%d\n", VERSION, SUBVERSION,
+           REVISION);
+    exit(EXIT_SUCCESS);
+}
+/**
+ * compara function used by the quick_sort() function
+ */
 static int compare_result(const void *res_1, const void *res_2)
 {
     return ((res_comp_t *) res_2)->percentage -
            ((res_comp_t *) res_1)->percentage;
 }
-
+/*
+ * Outputs the likeness percentage of all files
+ */
 static void comparision(int nb_files, file_info_t file_content[])
 {
     res_comp_t results[nb_files];
@@ -111,6 +153,10 @@ static void comparision(int nb_files, file_info_t file_content[])
     }
 }
 
+/**
+ * Returns the number of files concerned by the comparision mode
+ * 0 if none
+ */
 static uint64_t get_nb_files(FILE *in)
 {
     uint64_t nb_files = 0;
@@ -138,18 +184,24 @@ static uint64_t get_nb_files(FILE *in)
 }
 
 /* DEBUG STRUCT PRINT */
-// static void print_struct(file_info_t file_content[], uint64_t size)
-// {
-//     for (uint64_t i = 0; i < size; i++) {
-//         printf("%s\n", file_content[i].name);
-//         printf("%s\n", file_content[i].CTPH_hash);
-//         // for (int i = 0; i < 32; i++)
-//         printf("%s\n", file_content[i].SIMHASH_hash);
-//         if (i != size - 1)
-//             printf("\n");
-//     }
-// }
+/**
+ * static void print_struct(file_info_t file_content[], uint64_t size)
+ * {
+ *     for (uint64_t i = 0; i < size; i++) {
+ *         printf("%s\n", file_content[i].name);
+ *         printf("%s\n", file_content[i].CTPH_hash);
+ *         // for (int i = 0; i < 32; i++)
+ *         printf("%s\n", file_content[i].SIMHASH_hash);
+ *         if (i != size - 1)
+ *             printf("\n");
+ *     }
+ * }
+ */
 
+/**
+ * Parses the file and stores the hashes of each file in the structure
+ * file_content
+ */
 static void get_file_content(FILE *in, file_info_t file_content[],
                              uint64_t nb_files)
 {
@@ -172,7 +224,9 @@ static void get_file_content(FILE *in, file_info_t file_content[],
 
         int i = 0, index = 0;
         while (line_buf[i] != '\0') {
-
+            /** Checks if the content of the line is 1 (CTPH)
+             * if yes stores it
+             */
             if (line_buf[i] == '\t') {
                 while (line_buf[i] != '1' && line_buf[i] != '2')
                     i++;
@@ -184,7 +238,9 @@ static void get_file_content(FILE *in, file_info_t file_content[],
                 ctph_present = true;
                 file_content[file_count - 1].CTPH_hash[index] = '\0';
             }
-
+            /** Checks if the content of the line is 2 (SIMHASH)
+             * if yes stores it
+             */
             else if (line_buf[i] == '2' && i != 0 && file_count > 0) {
                 for (i = i + 2, index = 0;
                      line_buf[i] != '\0' && line_buf[i] != '\n'; i++, index++) {
@@ -194,8 +250,11 @@ static void get_file_content(FILE *in, file_info_t file_content[],
                 }
                 simhash_present = true;
                 file_content[file_count - 1].SIMHASH_hash[index] = '\0';
-
-            } else if (i == 0) {
+            }
+            /** Checks if the content of the line is the name of the file,
+             * if yes, Stores it
+             */
+            else if (i == 0) {
                 for (index = 0; line_buf[i] != '\0' && line_buf[i] != '\n';
                      i++, index++) {
                     file_content[file_count].name[index] = line_buf[i];
@@ -210,6 +269,7 @@ static void get_file_content(FILE *in, file_info_t file_content[],
         }
         fgets(line_buf, LINE_BUF_SIZE, in);
     }
+    /* check which algorithm was required and if present in the file */
     if (!ctph_present) {
         if (chosen_algorithm == CTPH)
             errx(EXIT_FAILURE,
@@ -228,6 +288,10 @@ static void get_file_content(FILE *in, file_info_t file_content[],
     }
 }
 
+/**
+ * General call to functions to get the number of files, get the hashes for each
+ * file and do the comparision
+ */
 static void file_parser(char *file_name)
 {
     FILE *in = fopen(file_name, "r");
@@ -239,41 +303,6 @@ static void file_parser(char *file_name)
     get_file_content(in, file_content, nb_files);
     comparision(nb_files, file_content);
     fclose(in);
-}
-
-/**/
-static void close_output()
-{
-    if (OUTPUT != stdout)
-        fclose(OUTPUT);
-}
-
-/**
- * Display the help and exit.
- */
-static void help(void)
-{
-    printf("Usage: tbt [-a ALGO|-o FILE|-c|-v|-V|-h] FILE|DIR\n"
-           "Compute Fuzzy Hashing\n\n"
-           " -a ALGO,--algorithm ALGO\tALGO : CTPH|SIMHASH|ALL\n"
-           " -c ,--compareHashes\t\t\tCompare the hashes stored in the given "
-           "file\n"
-           " -o FILE,--output FILE\t\twrite result to FILE\n"
-           " -v,--verbose\t\t\tverbose output\n"
-           " -V,--version\t\t\tdisplay version and exit\n"
-           " -h,--help\t\t\tdisplay this help\n");
-
-    exit(EXIT_SUCCESS);
-}
-
-/**
- * Display the program's version and exit.
- */
-static void version(void)
-{
-    printf("Triaging Binaries Toolkit %d.%d.%d\n", VERSION, SUBVERSION,
-           REVISION);
-    exit(EXIT_SUCCESS);
 }
 
 /**
@@ -308,6 +337,7 @@ static bool treat_file(char *file_path)
     char *temp_file_name = strrchr(file_path, '/');
     temp_file_name = (temp_file_name == NULL) ? file_path : temp_file_name + 1;
 
+    /* Write the hash(es) in the output */
     if (chosen_algorithm == ALL)
         fprintf(OUTPUT,
                 "%s:\n\t1:%s\n\t2:"
