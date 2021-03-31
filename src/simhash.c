@@ -9,16 +9,16 @@
 #define SIM_HASH_SIZE 16
 
 /* clang-format off */
-// uint64_t SHINGLE_SIZE[SECTION_END] =
-// {
-//     [INIT]      = 10000,
-//     [PLT]       = 10,
-//     [PLT_GOT]   = 10000,
-//     [FINI]      = 1,
-//     [TEXT]      = 2,
-//     [RODATA]    = 24,
-//     [DATA]      = 2
-// };
+uint64_t SHINGLE_SIZE[SECTION_END] =
+{
+    [INIT]      = UINT64_MAX,
+    [PLT]       = 1,
+    [PLT_GOT]   = UINT64_MAX,
+    [FINI]      = UINT64_MAX,
+    [TEXT]      = 1,
+    [RODATA]    = 20,
+    [DATA]      = UINT64_MAX
+};
 // uint64_t SHINGLE_SIZE[SECTION_END] =
 // {
 //     [INIT]      = 19,
@@ -29,16 +29,16 @@
 //     [RODATA]    = 1,
 //     [DATA]      = 1
 // };
-uint64_t SHINGLE_SIZE[SECTION_END] =
-{
-    [INIT]      = 10,
-    [PLT]       = 100,
-    [PLT_GOT]   = 10,
-    [FINI]      = 2,
-    [TEXT]      = UINT64_MAX,
-    [RODATA]    = UINT64_MAX,
-    [DATA]      = UINT64_MAX
-};
+// uint64_t SHINGLE_SIZE[SECTION_END] =
+// {
+//     [INIT]      = 10,
+//     [PLT]       = 100,
+//     [PLT_GOT]   = 10,
+//     [FINI]      = 2,
+//     [TEXT]      = UINT64_MAX,
+//     [RODATA]    = UINT64_MAX,
+//     [DATA]      = UINT64_MAX
+// };
 /* clang-format on */
 
 /* Static Functions */
