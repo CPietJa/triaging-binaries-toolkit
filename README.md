@@ -4,6 +4,9 @@ M1 research project
 ## Authors
 Pascale-Jade Vallot, Jasmin et Tibane Galbrun
 
+## Indirect Contributor
+0Intro - https://github.com/0intro/libelf
+
 # Installation
 
 ## Requirements
